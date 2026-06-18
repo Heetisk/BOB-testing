@@ -128,7 +128,7 @@ export default function LoginPage() {
           <div className="text-center text-text-muted text-xs mt-3">
             <p className="font-medium mb-2">Demo Accounts</p>
             <div className="space-y-1">
-              <p>Customer: <span className="text-text-secondary">jyot@example.com</span> / <span className="text-text-secondary">password123</span></p>
+              <p>Customer: <span className="text-text-secondary">user@example.com</span> / <span className="text-text-secondary">password123</span></p>
               <p>Admin: <span className="text-text-secondary">admin@example.com</span> / <span className="text-text-secondary">admin123</span></p>
             </div>
           </div>
