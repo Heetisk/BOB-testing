@@ -111,11 +111,6 @@ td.truncate, td.max-w-xs {
   text-overflow: ellipsis;
 }
 
-/* Card overflow containment */
-.bg-bg-card {
-  overflow: hidden;
-}
-
 /* Page content padding */
 .page-content {
   padding-left: 1rem;
