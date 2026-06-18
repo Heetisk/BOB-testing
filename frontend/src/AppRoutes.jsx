@@ -29,7 +29,7 @@ function ProtectedRoute({ children }) {
       <Navbar />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 min-w-0 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-[1600px] overflow-x-hidden">{children}</main>
+        <main className="flex-1 min-w-0 px-6 py-5 sm:px-10 sm:py-6 lg:px-12 lg:py-8 max-w-[1600px]">{children}</main>
       </div>
     </div>
   );
