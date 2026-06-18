@@ -1,0 +1,58 @@
+# Deployment files (not needed in repo)
+DEPLOYMENT.md
+render.yaml
+
+# AGENTS.md files
+AGENTS.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+
+# Database
+*.db
+*.sqlite3
+
+# Environment variables
+.env
+.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ML models (regenerated)
+backend/app/ml/model/model.pkl
+backend/app/ml/model/scaler.pkl
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build artifacts
+frontend/dist/
