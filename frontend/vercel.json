@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://bob-testing.onrender.com/api/:path*"
+    },
+    {
+      "source": "/((?!api/|assets/|.*\\.).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
