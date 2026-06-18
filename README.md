@@ -21,7 +21,7 @@ The system includes a **Traffic Simulator** that generates realistic user activi
 5. Check **Alerts** - see auto-generated alerts for high-risk events
 6. Check **Cases** - see fraud cases created for critical events
 7. Try registering a new account from the login page
-8. Login as customer (`jyot@example.com` / `password123`) - see personal dashboard
+8. Login as customer (`user@example.com` / `password123`) - see personal dashboard
 
 ### Simulation Scenarios
 
@@ -156,7 +156,7 @@ npm run dev
 
 | Role | Email | Password |
 |------|-------|----------|
-| Customer | jyot@example.com | password123 |
+| Customer | user@example.com | password123 |
 | Customer | rahul@example.com | password123 |
 | Customer | priya@example.com | password123 |
 | Admin | admin@example.com | admin123 |

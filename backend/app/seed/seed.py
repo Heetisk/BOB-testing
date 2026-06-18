@@ -30,7 +30,7 @@ from app.models.privacy import ConsentRecord, DataAccessLog
 USERS = [
     {
         "name": "Jyot Patel",
-        "email": "jyot@example.com",
+        "email": "user@example.com",
         "password": "password123",
         "phone": "+91 98765 43210",
         "role": "customer",
