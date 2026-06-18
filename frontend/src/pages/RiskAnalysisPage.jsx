@@ -50,7 +50,7 @@ export default function RiskAnalysisPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-6 sm:p-7 space-y-5">
           <h3 className="text-text-primary font-semibold flex items-center gap-2.5 text-base">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Shield size={18} className="text-primary" />
@@ -151,7 +151,7 @@ export default function RiskAnalysisPage() {
                 level={result.risk_level}
                 reasons={result.risk_reasons}
               />
-              <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+              <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
                 <h3 className="text-text-primary font-semibold mb-5 text-base">Analysis Details</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between py-2 border-b border-border/50">
@@ -191,7 +191,7 @@ export default function RiskAnalysisPage() {
           )}
 
           {!result && !loading && (
-            <div className="bg-bg-card border border-border rounded-2xl p-12 sm:p-16 text-center">
+            <div className="bg-bg-card border border-border rounded-xl p-12 sm:p-16 text-center">
               <Shield size={48} className="text-text-muted mx-auto mb-4 opacity-50" />
               <p className="text-text-muted text-base">Enter login details to analyze risk</p>
               <p className="text-text-muted text-sm mt-1">Results will appear here</p>

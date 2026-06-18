@@ -39,7 +39,7 @@ export default function AuditPage() {
         <p className="text-text-secondary text-sm sm:text-base mt-2">Privileged access monitoring</p>
       </div>
 
-      <div className="bg-bg-card border border-border rounded-2xl overflow-hidden">
+      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px]">
             <thead>

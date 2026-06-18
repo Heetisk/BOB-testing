@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-secondary/10 via-secondary/5 to-transparent rounded-2xl p-6 sm:p-8 border border-secondary/10">
+      <div className="bg-gradient-to-r from-secondary/10 via-secondary/5 to-transparent rounded-xl p-6 sm:p-8 border border-secondary/10">
         <div className="flex items-center gap-3 mb-2">
           <BarChart3 size={28} className="text-secondary" />
           <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Admin Dashboard</h1>
@@ -68,17 +68,17 @@ export default function AdminDashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <h3 className="text-text-primary font-semibold mb-5 text-base">Risk Distribution</h3>
           <RiskDistributionChart data={riskDist} />
         </div>
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <h3 className="text-text-primary font-semibold mb-5 text-base">Top Fraud Reasons</h3>
           <FraudReasonChart data={fraudReasons} />
         </div>
       </div>
 
-      <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+      <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
         <h3 className="text-text-primary font-semibold mb-5 text-base">Login Trends (by Hour)</h3>
         <LoginTrendChart data={loginTrends} />
       </div>

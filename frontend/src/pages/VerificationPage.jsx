@@ -64,7 +64,7 @@ export default function VerificationPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7 space-y-5">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7 space-y-5">
           <h3 className="text-text-primary font-semibold flex items-center gap-2.5 text-base">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <KeyRound size={18} className="text-primary" />
@@ -104,7 +104,7 @@ export default function VerificationPage() {
           </div>
         </div>
 
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <h3 className="text-text-primary font-semibold mb-5 text-base">Verification History</h3>
           <div className="space-y-3">
             {verifications.map((v) => (

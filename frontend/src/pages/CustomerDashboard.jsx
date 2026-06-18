@@ -57,7 +57,7 @@ export default function CustomerDashboard() {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl p-6 sm:p-8 border border-primary/10">
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl p-6 sm:p-8 border border-primary/10">
         <div className="flex items-center gap-3 mb-2">
           <ShieldCheck size={28} className="text-primary" />
           <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">My Account</h1>
@@ -85,7 +85,7 @@ export default function CustomerDashboard() {
 
       {/* Open Alerts */}
       {openAlerts.length > 0 && (
-        <div className="bg-danger/5 border border-danger/20 rounded-2xl p-5 sm:p-6">
+        <div className="bg-danger/5 border border-danger/20 rounded-xl p-5 sm:p-6">
           <h3 className="text-danger font-semibold mb-4 flex items-center gap-2 text-base">
             <Bell size={18} />
             Open Alerts ({openAlerts.length})
@@ -100,7 +100,7 @@ export default function CustomerDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Logins */}
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <h3 className="text-text-primary font-semibold mb-5 flex items-center gap-2.5 text-base">
             <Eye size={18} className="text-primary" />
             Recent Logins
@@ -130,7 +130,7 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <h3 className="text-text-primary font-semibold mb-5 flex items-center gap-2.5 text-base">
             <ArrowLeftRight size={18} className="text-primary" />
             Recent Transactions
@@ -162,7 +162,7 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Devices */}
-      <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+      <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
         <h3 className="text-text-primary font-semibold mb-5 flex items-center gap-2.5 text-base">
           <Smartphone size={18} className="text-primary" />
           My Devices

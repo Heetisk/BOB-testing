@@ -55,7 +55,7 @@ export default function LoginPage() {
           <p className="text-text-secondary mt-2 text-base">Identity Trust Framework</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-2xl p-7 sm:p-8 space-y-5 shadow-2xl shadow-black/20">
+        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-7 sm:p-8 space-y-5 shadow-2xl shadow-black/20">
           {error && (
             <div className="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-xl">
               {error}

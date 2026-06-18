@@ -51,7 +51,7 @@ export default function PrivacyPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <h3 className="text-text-primary font-semibold flex items-center gap-2.5 mb-5 text-base">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Eye size={18} className="text-primary" />
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
           )}
         </div>
 
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <h3 className="text-text-primary font-semibold flex items-center gap-2.5 mb-5 text-base">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Lock size={18} className="text-primary" />

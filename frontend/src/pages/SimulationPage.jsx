@@ -193,7 +193,7 @@ export default function SimulationPage() {
       </div>
 
       {/* Live Feed */}
-      <div className="bg-bg-card border border-border rounded-2xl overflow-hidden">
+      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="text-text-primary font-semibold flex items-center gap-2">
             <Activity size={18} className="text-primary" />

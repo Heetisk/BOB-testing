@@ -77,7 +77,7 @@ export default function TransactionsPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-6 sm:p-7 space-y-5">
           <h3 className="text-text-primary font-semibold text-base">Create Transaction</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -132,7 +132,7 @@ export default function TransactionsPage() {
         </form>
       )}
 
-      <div className="bg-bg-card border border-border rounded-2xl overflow-hidden">
+      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px]">
             <thead>

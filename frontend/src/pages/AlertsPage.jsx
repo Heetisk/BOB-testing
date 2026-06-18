@@ -59,7 +59,7 @@ export default function AlertsPage() {
           <AlertCard key={alert.alert_id} alert={alert} />
         ))}
         {filteredAlerts.length === 0 && (
-          <div className="bg-bg-card border border-border rounded-2xl p-12 sm:p-16 text-center">
+          <div className="bg-bg-card border border-border rounded-xl p-12 sm:p-16 text-center">
             <Bell size={48} className="mx-auto mb-4 text-text-muted opacity-50" />
             <p className="text-text-muted text-base">No alerts found</p>
             <p className="text-text-muted text-sm mt-1">All clear for now</p>

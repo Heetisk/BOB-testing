@@ -66,7 +66,7 @@ export default function KycPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-6 sm:p-7 space-y-5">
           <h3 className="text-text-primary font-semibold text-base">Submit KYC Document</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -113,7 +113,7 @@ export default function KycPage() {
       )}
 
       {kyc ? (
-        <div className="bg-bg-card border border-border rounded-2xl p-6 sm:p-7">
+        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <Shield size={24} className="text-primary" />
@@ -143,7 +143,7 @@ export default function KycPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-bg-card border border-border rounded-2xl p-12 sm:p-16 text-center">
+        <div className="bg-bg-card border border-border rounded-xl p-12 sm:p-16 text-center">
           <FileCheck size={48} className="text-text-muted mx-auto mb-4 opacity-50" />
           <p className="text-text-muted text-base">No KYC verification found</p>
           <p className="text-text-muted text-sm mt-1">Submit your documents for verification</p>
