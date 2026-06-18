@@ -158,7 +158,7 @@ npm run dev
 |------|-------|----------|
 | Customer | user@example.com | password123 |
 | Customer | rahul@example.com | password123 |
-| Customer | priya@example.com | password123 |
+| Customer | priyanshi@example.com | password123 |
 | Admin | admin@example.com | admin123 |
 | Fraud Analyst | fraud@example.com | fraud123 |
 

@@ -47,8 +47,8 @@ USERS = [
         "usual_device": "Windows_Chrome",
     },
     {
-        "name": "Priya Singh",
-        "email": "priya@example.com",
+        "name": "Priyanshi",
+        "email": "priyanshi@example.com",
         "password": "password123",
         "phone": "+91 76543 21098",
         "role": "customer",
