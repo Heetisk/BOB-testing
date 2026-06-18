@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://accountguard-api.onrender.com/api/:path*"
+      "destination": "https://bob-testing.onrender.com/api/:path*"
     }
   ],
   "headers": [
