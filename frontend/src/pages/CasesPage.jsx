@@ -44,7 +44,7 @@ export default function CasesPage() {
 
       <div className="bg-bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-border bg-bg-dark/50">
                 <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Case ID</th>
