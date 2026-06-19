@@ -16,10 +16,15 @@ export default function SimulationPage() {
   const [speed, setSpeed] = useState(2.0);
   const eventSourceRef = useRef(null);
   const eventsEndRef = useRef(null);
+  const pollingRef = useRef(null);
+  const lastEventCount = useRef(0);
 
   useEffect(() => {
     fetchStatus();
-    return () => disconnectSSE();
+    return () => {
+      disconnectSSE();
+      stopPolling();
+    };
   }, []);
 
   useEffect(() => {
@@ -48,9 +53,13 @@ export default function SimulationPage() {
 
   const connectSSE = () => {
     disconnectSSE();
+    stopPolling();
+
     const eventSource = new EventSource(
       `/api/v1/simulation/stream?token=${token}`
     );
+
+    let sseFailed = false;
 
     eventSource.onmessage = (event) => {
       try {
@@ -72,9 +81,40 @@ export default function SimulationPage() {
       }
     };
 
-    eventSource.onerror = () => {};
+    eventSource.onerror = () => {
+      if (!sseFailed) {
+        sseFailed = true;
+        eventSource.close();
+        startPolling();
+      }
+    };
 
     eventSourceRef.current = eventSource;
+  };
+
+  const startPolling = () => {
+    stopPolling();
+    pollingRef.current = setInterval(async () => {
+      try {
+        const data = await getSimulationStatus();
+        setStatus(data);
+
+        const newEvents = data.recent_events || [];
+        if (newEvents.length > lastEventCount.current) {
+          setEvents(newEvents.slice(0, 50));
+          lastEventCount.current = newEvents.length;
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 2500);
+  };
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
   };
 
   const disconnectSSE = () => {
@@ -97,6 +137,7 @@ export default function SimulationPage() {
     try {
       await stopSimulation();
       disconnectSSE();
+      stopPolling();
       await fetchStatus();
     } catch (err) {
       console.error('Failed to stop simulation');
