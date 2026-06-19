@@ -10,7 +10,6 @@ from sqlalchemy import select, func
 from datetime import datetime, timedelta
 from typing import Optional
 from dataclasses import dataclass
-import asyncio
 
 from app.services.device_service import DeviceService
 from app.services.location_service import LocationService
@@ -127,17 +126,21 @@ class RiskService:
         if login_time is None:
             login_time = datetime.utcnow()
 
-        # Parallelize independent DB reads
-        is_new_device, is_trusted, is_new_location, is_impossible_travel, failed_attempts = await asyncio.gather(
-            self.device_service.is_new_device(user.user_id, device_id),
-            self.device_service.is_trusted_device(user.user_id, device_id),
-            self.location_service.is_new_location(user.user_id, city),
-            self.location_service.is_impossible_travel(user.user_id, city, login_time),
-            self._get_failed_attempts(user.user_id),
+        # Check device risk
+        is_new_device = await self.device_service.is_new_device(user.user_id, device_id)
+        is_trusted = await self.device_service.is_trusted_device(user.user_id, device_id)
+
+        # Check location risk
+        is_new_location = await self.location_service.is_new_location(user.user_id, city)
+        is_impossible_travel = await self.location_service.is_impossible_travel(
+            user.user_id, city, login_time
         )
 
         # Check night login (10 PM - 5 AM)
         is_night_login = is_unusual_hour(login_time.hour)
+
+        # Get failed attempts from actual login history
+        failed_attempts = await self._get_failed_attempts(user.user_id)
 
         # Rule-based risk calculation
         risk_factors = RiskFactors(
@@ -169,31 +172,31 @@ class RiskService:
         if ml_prediction["model_used"] == "ml" and ml_prediction["fraud_probability"] > 0.7:
             reasons.append("ML model flagged high fraud probability")
 
-        # Save device record and login event in parallel
-        await asyncio.gather(
-            self.device_service.save_device(
-                user_id=user.user_id,
-                device_id=device_id,
-                device_name=device_name,
-                browser=browser,
-                os=os,
-                is_trusted=is_trusted,
-            ),
-            self._save_login_event(
-                user_id=user.user_id,
-                device_id=device_id,
-                browser=browser,
-                os=os,
-                city=city,
-                ip_address=ip_address,
-                login_time=login_time,
-                is_successful=True,
-                risk_score=combined_score,
-                risk_level=risk_level,
-                action_taken=action,
-                is_new_device=is_new_device,
-                is_new_location=is_new_location,
-            ),
+        # Save device record
+        await self.device_service.save_device(
+            user_id=user.user_id,
+            device_id=device_id,
+            device_name=device_name,
+            browser=browser,
+            os=os,
+            is_trusted=is_trusted,
+        )
+
+        # Persist login event
+        await self._save_login_event(
+            user_id=user.user_id,
+            device_id=device_id,
+            browser=browser,
+            os=os,
+            city=city,
+            ip_address=ip_address,
+            login_time=login_time,
+            is_successful=True,
+            risk_score=combined_score,
+            risk_level=risk_level,
+            action_taken=action,
+            is_new_device=is_new_device,
+            is_new_location=is_new_location,
         )
 
         # Create alert for medium/high risk (single alert, not duplicate)
