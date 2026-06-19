@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { KeyRound, Send } from 'lucide-react';
 import apiClient from '../api/apiClient';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Input from '../components/Input';
 import { formatDate } from '../utils/helpers';
 import Loader from '../components/Loader';
 
@@ -9,21 +12,24 @@ export default function VerificationPage() {
   const [loading, setLoading] = useState(true);
   const [otpCode, setOtpCode] = useState('');
   const [otpResult, setOtpResult] = useState(null);
-
-  useEffect(() => {
-    fetchVerifications();
-  }, []);
+  const [sentCode, setSentCode] = useState(null);
 
   const fetchVerifications = async () => {
     try {
       const data = await apiClient.get('/verification/history');
       setVerifications(data.data.verifications || []);
-    } catch (err) {
-      console.error('Failed to fetch verifications');
-    } finally {
-      setLoading(false);
-    }
+    } catch { console.error('Failed to fetch verifications'); }
+    finally { setLoading(false); }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    apiClient.get('/verification/history')
+      .then((data) => { if (!cancelled) setVerifications(data.data.verifications || []); })
+      .catch(() => console.error('Failed to fetch verifications'))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const requestOtp = async () => {
     try {
@@ -33,11 +39,10 @@ export default function VerificationPage() {
         city: 'Surat',
         ip_address: '192.168.1.100',
       });
-      alert(`OTP Code: ${data.data.code}`);
+      setSentCode(data.data.code);
+      setOtpResult(null);
       fetchVerifications();
-    } catch (err) {
-      console.error('Failed to request OTP');
-    }
+    } catch { console.error('Failed to request OTP'); }
   };
 
   const verifyOtp = async () => {
@@ -48,8 +53,9 @@ export default function VerificationPage() {
       });
       setOtpResult(data.data);
       setOtpCode('');
+      setSentCode(null);
       fetchVerifications();
-    } catch (err) {
+    } catch {
       setOtpResult({ success: false, message: 'Verification failed' });
     }
   };
@@ -57,74 +63,74 @@ export default function VerificationPage() {
   if (loading) return <Loader text="Loading verification history..." />;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Step-up Verification</h1>
-        <p className="text-text-secondary text-sm sm:text-base mt-2">OTP and multi-factor authentication</p>
+    <div className="space-y-6">
+      <div className="animate-fade-in-up">
+        <div className="flex items-center gap-3 mb-1">
+          <KeyRound size={20} className="text-accent" aria-hidden="true" />
+          <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Verification</h1>
+        </div>
+        <p className="text-sm text-text-3 ml-[32px]">OTP and multi-factor authentication</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7 space-y-5">
-          <h3 className="text-text-primary font-semibold flex items-center gap-2.5 text-base">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <KeyRound size={18} className="text-primary" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card padding="lg" className="animate-fade-in-up stagger-1">
+          <h3 className="text-sm font-semibold text-text-1 font-display mb-4 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <KeyRound size={14} className="text-accent" aria-hidden="true" />
             </div>
             Request OTP
           </h3>
-          <button
-            onClick={requestOtp}
-            className="w-full py-3 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-bg-dark font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/20"
-          >
-            <Send size={18} />
-            Send OTP
-          </button>
 
-          <div className="border-t border-border pt-5">
-            <h4 className="text-text-primary font-medium mb-3">Verify Code</h4>
-            <div className="flex gap-3">
-              <input
+          <Button fullWidth size="md" icon={Send} onClick={requestOtp}>Send OTP</Button>
+
+          {sentCode && (
+            <div className="mt-3 p-3 bg-accent-subtle border border-accent/20 rounded-xl text-sm text-accent font-mono">
+              OTP Code: <span className="font-bold">{sentCode}</span>
+            </div>
+          )}
+
+          <div className="mt-5 pt-5 border-t border-surface-3/50">
+            <h4 className="text-sm font-medium text-text-1 mb-3">Verify Code</h4>
+            <div className="flex gap-2">
+              <Input
+                label="OTP Code"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value)}
-                className="flex-1 px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
                 placeholder="Enter 6-digit code"
                 maxLength={6}
+                containerClassName="flex-1"
               />
-              <button
-                onClick={verifyOtp}
-                className="px-6 py-2.5 bg-success hover:bg-success/80 text-white font-semibold rounded-xl transition-colors cursor-pointer"
-              >
-                Verify
-              </button>
+              <Button variant="success" size="md" onClick={verifyOtp}>Verify</Button>
             </div>
             {otpResult && (
-              <div className={`mt-3 text-sm font-medium ${otpResult.success ? 'text-success' : 'text-danger'}`}>
+              <p className={`mt-2 text-sm font-medium ${otpResult.success ? 'text-success' : 'text-danger'}`}>
                 {otpResult.message}
-              </div>
+              </p>
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
-          <h3 className="text-text-primary font-semibold mb-5 text-base">Verification History</h3>
-          <div className="space-y-3">
+        <Card padding="lg" className="animate-fade-in-up stagger-2">
+          <h3 className="text-sm font-semibold text-text-1 font-display mb-4">Verification History</h3>
+          <div className="space-y-2">
             {verifications.map((v) => (
-              <div key={v.verification_id} className="flex items-center justify-between p-4 bg-bg-dark/50 rounded-xl border border-border/50">
+              <div key={v.verification_id} className="flex items-center justify-between p-3 bg-surface-0 rounded-xl border border-surface-3/30">
                 <div>
-                  <p className="text-text-primary text-sm font-medium">{v.verification_type}</p>
-                  <p className="text-text-muted text-xs mt-0.5">{formatDate(v.requested_at)}</p>
+                  <p className="text-sm font-medium text-text-1">{v.verification_type}</p>
+                  <p className="text-[10px] text-text-3/60 mt-0.5">{formatDate(v.requested_at)}</p>
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                  v.is_verified ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  v.is_verified ? 'text-success bg-success-subtle' : 'text-warning bg-warning-subtle'
                 }`}>
                   {v.is_verified ? 'Verified' : 'Pending'}
                 </span>
               </div>
             ))}
             {verifications.length === 0 && (
-              <p className="text-text-muted text-sm text-center py-6">No verification history</p>
+              <p className="text-sm text-text-3 text-center py-6">No verification history</p>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

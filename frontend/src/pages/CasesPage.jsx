@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { FolderOpen } from 'lucide-react';
 import apiClient from '../api/apiClient';
 import RiskBadge from '../components/RiskBadge';
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
 import { formatDate } from '../utils/helpers';
 import Loader from '../components/Loader';
 
@@ -10,78 +12,74 @@ export default function CasesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCases();
-    const interval = setInterval(fetchCases, 5000);
-    return () => clearInterval(interval);
+    let cancelled = false;
+
+    const fetchAndSet = () => {
+      apiClient.get('/cases/')
+        .then((data) => { if (!cancelled) setCases(data.data.cases || []); })
+        .catch(() => console.error('Failed to fetch cases'))
+        .finally(() => { if (!cancelled) setLoading(false); });
+    };
+
+    fetchAndSet();
+    const interval = setInterval(fetchAndSet, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
-  const fetchCases = async () => {
-    try {
-      const data = await apiClient.get('/cases/');
-      setCases(data.data.cases || []);
-    } catch (err) {
-      console.error('Failed to fetch cases');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status) => {
+  const getStatusStyle = (status) => {
     switch (status) {
-      case 'open': return 'bg-warning/10 text-warning';
-      case 'investigating': return 'bg-info/10 text-info';
-      case 'resolved': return 'bg-success/10 text-success';
-      default: return 'bg-text-muted/10 text-text-muted';
+      case 'open': return 'text-warning bg-warning-subtle';
+      case 'investigating': return 'text-info bg-info-subtle';
+      case 'resolved': return 'text-success bg-success-subtle';
+      default: return 'text-text-3 bg-surface-2';
     }
   };
 
   if (loading) return <Loader text="Loading cases..." />;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Fraud Cases</h1>
-        <p className="text-text-secondary text-sm sm:text-base mt-2">Manage and investigate fraud cases</p>
+    <div className="space-y-6">
+      <div className="animate-fade-in-up">
+        <div className="flex items-center gap-3 mb-1">
+          <FolderOpen size={20} className="text-accent" aria-hidden="true" />
+          <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Fraud Cases</h1>
+        </div>
+        <p className="text-sm text-text-3 ml-[32px]">Manage and investigate fraud cases</p>
       </div>
 
-      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead>
-              <tr className="border-b border-border bg-bg-dark/50">
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Case ID</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">User ID</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Risk Score</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Status</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Notes</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cases.map((c, idx) => (
-                <tr key={c.case_id} className={`border-b border-border/50 hover:bg-bg-card-hover/50 transition-colors ${idx % 2 === 0 ? 'bg-bg-dark/20' : ''}`}>
-                  <td className="px-6 py-4 text-text-primary text-sm font-medium">#{c.case_id}</td>
-                  <td className="px-6 py-4 text-text-secondary text-sm">#{c.user_id}</td>
-                  <td className="px-6 py-4"><RiskBadge level={c.risk_score > 70 ? 'High' : 'Medium'} size="sm" /></td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(c.case_status)}`}>
-                      {c.case_status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-text-muted text-sm max-w-xs truncate">{c.admin_notes || 'N/A'}</td>
-                  <td className="px-6 py-4 text-text-muted text-sm">{formatDate(c.created_at)}</td>
+      <Card padding="none" className="animate-fade-in-up stagger-1">
+        {cases.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-surface-3/50">
+                  {['Case ID', 'User', 'Risk', 'Status', 'Notes', 'Created'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-text-3/70 bg-surface-0/50">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {cases.length === 0 && (
-          <div className="text-center py-16 text-text-muted">
-            <FolderOpen size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="text-base">No fraud cases found</p>
+              </thead>
+              <tbody>
+                {cases.map((c) => (
+                  <tr key={c.case_id} className="border-b border-surface-3/30 hover:bg-surface-2/30 transition-colors">
+                    <td className="px-4 py-3 text-sm text-text-2 font-mono">#{c.case_id}</td>
+                    <td className="px-4 py-3 text-sm text-text-2 font-mono">#{c.user_id}</td>
+                    <td className="px-4 py-3"><RiskBadge level={c.risk_score > 70 ? 'High' : 'Medium'} size="sm" /></td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusStyle(c.case_status)}`}>
+                        {c.case_status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-3 max-w-[200px] truncate">{c.admin_notes || 'N/A'}</td>
+                    <td className="px-4 py-3 text-xs text-text-3">{formatDate(c.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        ) : (
+          <EmptyState icon={FolderOpen} title="No fraud cases found" />
         )}
-      </div>
+      </Card>
     </div>
   );
 }

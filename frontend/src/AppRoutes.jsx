@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
@@ -14,22 +15,30 @@ import VerificationPage from './pages/VerificationPage';
 import PrivacyPage from './pages/PrivacyPage';
 import NotFoundPage from './pages/NotFoundPage';
 import SimulationPage from './pages/SimulationPage';
-import Navbar from './components/Navbar';
+import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import Loader from './components/Loader';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) return <Loader text="Loading..." />;
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div className="min-h-screen bg-bg-dark">
-      <Navbar />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 min-w-0 px-5 py-5 sm:px-8 sm:py-6 lg:px-10 lg:py-8 max-w-[1600px]">{children}</main>
+    <div className="flex min-h-screen bg-surface-0">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-accent focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">
+        Skip to main content
+      </a>
+      <Sidebar mobileOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <div className="flex-1 min-w-0 overflow-x-hidden flex flex-col">
+        <TopBar onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
+        <main id="main-content" className="flex-1">
+          <div className="p-4 lg:p-6 xl:p-8 max-w-[1400px] mx-auto">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

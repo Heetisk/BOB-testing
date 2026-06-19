@@ -7,18 +7,31 @@ For senior devs who need to understand, maintain, or scale this project without 
 ## Architecture at a Glance
 
 ```
-Request Flow:
-  Browser → Vite Proxy (/api) → FastAPI → Route → Service → Model → SQLite
-                                                    ↓
-                                              RiskService (ML + Rules)
-                                                    ↓
-                                              AlertService / CaseService
+Request Flow (Production):
+  Browser → Vercel SPA (/) ──────────────────────────────────────────────┐
+            Vercel API Proxy (/api → bob-testing.onrender.com)           │
+                ↓                                                        │
+            FastAPI (Render) → Route → Service → Model → PostgreSQL (Render)
+                                        ↓
+                                  RiskService (ML + Rules)
+                                        ↓
+                                  AlertService / CaseService
+
+Request Flow (Local Development):
+  Browser → Vite Dev Server (localhost:5173)
+            Vite API Proxy (/api → localhost:8000)
+                ↓
+            FastAPI → Route → Service → Model → SQLite (accountguard.db)
 
 Real-time Flow (Simulator):
-  SimulatorService → RiskService → DB → SSE Queue → Frontend EventSource
+  SimulatorService → RiskService → DB (persisted) → Frontend polls (5s interval)
+                                        ↓
+                                  SSE Queue → EventSource (fallback: polling)
 ```
 
 **Key Principle:** Routes are thin. Services contain business logic. Models are pure data. ML is isolated.
+
+**Deployment:** Vercel (frontend) + Render (backend + PostgreSQL). Vercel proxies `/api` to Render via `vercel.json` rewrites. Render builds with `pip install` + ML model training, seeds DB at startup.
 
 ---
 
@@ -27,9 +40,9 @@ Real-time Flow (Simulator):
 ### Entry & Config
 | File | Purpose | What to modify |
 |------|---------|----------------|
-| `backend/main.py` | App factory, CORS, lifespan (DB init on startup), route registration | Change CORS origins, add middleware, mount static files |
+| `backend/main.py` | App factory, CORS, lifespan (DB init + seed on startup), route registration. **Health check:** `@app.api_route("/health", methods=["GET", "HEAD"])` — Render sends HEAD for health checks | Change CORS origins, add middleware, mount static files |
 | `backend/app/core/config.py` | Pydantic Settings — loads from `.env`, cached singleton | Add new env vars here |
-| `backend/app/core/database.py` | Async SQLAlchemy engine, session factory, `get_db()` with auto-commit, `init_db()` | Change DB URL, pool settings, add migration support |
+| `backend/app/core/database.py` | Async SQLAlchemy engine, session factory, `get_db()` with auto-commit, `init_db()`. **URL rewrite:** `postgresql://` → `postgresql+asyncpg://` (asyncpg driver required). **PostgreSQL constraint:** `timestamp without time zone` — all datetimes must be naive (`datetime.utcnow()`) | Change DB URL, pool settings, add migration support |
 | `backend/app/core/security.py` | JWT create/decode, bcrypt hash/verify | Change token expiry, add refresh tokens |
 
 ### Adding a New Feature (End-to-End)
@@ -65,7 +78,7 @@ Real-time Flow (Simulator):
 | Service | File | What it does | Used by |
 |---------|------|--------------|---------|
 | `AuthService` | `auth_service.py` | User lookup, password verify, JWT create, user create | Auth routes, all protected routes |
-| `RiskService` | `risk_service.py` | **Core engine.** Orchestrates device+location+ML analysis. Creates LoginEvent, Alert, FraudCase | Auth routes, transaction routes, simulator |
+| `RiskService` | `risk_service.py` | **Core engine.** Orchestrates device+location+ML analysis. Creates LoginEvent, Alert, FraudCase. **Note:** DB queries are sequential (not parallel) — asyncpg doesn't support nested transactions on same session | Auth routes, transaction routes, simulator |
 | `DeviceService` | `device_service.py` | is_new_device(), is_trusted_device(), save_device() | RiskService, recovery |
 | `LocationService` | `location_service.py` | is_new_location(), is_impossible_travel(), get_last_login() | RiskService, recovery |
 | `TransactionService` | `transaction_service.py` | Create transactions, check new_beneficiary, high_amount | RiskService, transaction routes |
@@ -196,7 +209,14 @@ require_role(roles)   → Factory for custom role checks — defined for future 
 ### State Management
 - **Auth:** React Context (`AuthContext`) — user, token, login/register/logout
 - **No global state library** — each page manages its own data with `useState` + `useEffect`
-- **Real-time:** SSE via `EventSource` in SimulationPage
+- **Real-time:** SSE via `EventSource` in SimulationPage (with polling fallback)
+- **Auto-refresh:** AdminDashboard, CustomerDashboard, TransactionsPage, AlertsPage, CasesPage poll every 5 seconds via `setInterval`
+
+### Frontend Gotchas
+- **Tailwind v4:** Do NOT add `* { padding: 0 }` in `index.css` — it kills ALL Tailwind padding utilities (`px-*`, `py-*`, `p-*`). Use reset only on specific elements.
+- **Vercel SSE buffering:** Vercel proxies buffer SSE responses, breaking `EventSource`. SimulationPage falls back to polling (2.5s interval) when SSE fails.
+- **Dashboard Promise.all:** Use `Promise.allSettled` instead of `Promise.all` for parallel API calls — partial failures don't kill the entire page.
+- **Container padding:** Main content area uses `px-5 sm:px-8 lg:px-10` for adequate spacing.
 
 ---
 
@@ -208,20 +228,24 @@ SimulationPage
     │                                            ↓
     │                                       _run() loop
     │                                            ↓
-    │                                       _generate_event()
+    │                                       _generate_event() → _generate_login() / _generate_transaction()
     │                                            ↓
     │                                   AsyncSessionLocal() (standalone, not FastAPI Depends)
     │                                            ↓
     │                                   RiskService(db).analyze_login_risk() / analyze_transaction_risk()
     │                                            ↓
-    │                                   SimulationEvent created
+    │                                   Persisted to DB (LoginEvent + Transaction + Alert + FraudCase)
     │                                            ↓
-    │                                   broadcast() → Queue → SSE stream
+    │                                   SimulationEvent created → broadcast() → Queue → SSE stream
+    │                                            ↓
+    │                                   Frontend polls every 5s (SSE as fallback via Vercel)
     │                                            ↓
     └── EventSource(/simulation/stream) ← Frontend receives event → updates UI
 ```
 
 **9 Scenarios:** normal_login, new_city_login, night_login, impossible_travel, failed_attempts, large_transaction, rapid_transactions, normal_transaction, suspicious_beneficiary
+
+**DB Persistence:** Simulator transactions are now persisted to the database via `TransactionService.create_transaction()`, not just in-memory. Alerts and fraud cases are also persisted. Data survives server restarts.
 
 ---
 
@@ -269,14 +293,42 @@ Services reuse these instead of duplicating logic:
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `APP_NAME` | AccountGuard AI | Application name |
-| `DATABASE_URL` | sqlite+aiosqlite:///./accountguard.db | Database connection |
+| `DATABASE_URL` | sqlite+aiosqlite:///./accountguard.db | Database connection. On Render: `postgresql://...` (auto-rewritten to `postgresql+asyncpg://`) |
 | `JWT_SECRET_KEY` | (change in production) | JWT signing secret |
 | `JWT_ALGORITHM` | HS256 | JWT algorithm |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | 30 | Token expiry |
-| `CORS_ORIGINS` | ["http://localhost:5173"] | Allowed origins |
+| `CORS_ORIGINS` | ["http://localhost:5173"] | Allowed origins. On Render: `["https://accountguard-ai.vercel.app"]` |
 | `ML_MODEL_PATH` | app/ml/model/model.pkl | Trained model path |
 | `ML_SCALER_PATH` | app/ml/model/scaler.pkl | Feature scaler path |
+| `MODEL_PATH` | model/model.pkl | Alternative model path (used by some services) |
+| `SCALER_PATH` | model/scaler.pkl | Alternative scaler path (used by some services) |
+| `SEED_FORCE` | false | Set `true` on Render to drop all tables and re-seed from scratch |
+| `PYTHONUNBUFFERED` | 1 | Force unbuffered output (set on Render for visible logs) |
 | `DEBUG` | false | Enable SQL logging |
+
+**Render-specific:** `SEED_FORCE=true` should be set once to fix partial seeds, then removed. `PYTHONUNBUFFERED=1` ensures seed output is visible in Render logs.
+
+---
+
+## Deployment
+
+### Frontend (Vercel)
+- **Framework:** Vite (React)
+- **Config:** `frontend/vercel.json` — rewrites `/api/*` to Render backend, SPA catch-all for React Router
+- **URL:** `https://accountguard-ai.vercel.app` (or custom domain)
+
+### Backend (Render)
+- **Runtime:** Python 3.12 (pinned — `pydantic-core==2.27.2` has no wheel for 3.14)
+- **Build Command:** `pip install -r requirements.txt && python -m app.ml.train_model`
+- **Start Command:** `python -m app.seed.seed && uvicorn main:app --host 0.0.0.0 --port $PORT`
+- **Blueprint:** `render.yaml` — defines service, env vars, PostgreSQL database
+- **Database:** Render PostgreSQL (auto-provisioned via `render.yaml`)
+
+### Key Gotchas
+1. **Render manual settings override `render.yaml`:** If you set Build/Start commands in the dashboard, they override `render.yaml`. Ensure commands match.
+2. **Cold starts drop data on free tier:** Render free tier spins down on idle. Seed runs at startup, but simulator data is lost. Use `SEED_FORCE=false` after first successful seed.
+3. **Vercel buffering kills SSE:** Vercel proxies buffer responses, breaking SSE streams. Frontend falls back to polling (2.5s interval for simulation, 5s for dashboards).
+4. **passlib + bcrypt compatibility:** `passlib 1.7.4` + `bcrypt>=4.1` causes `AttributeError: module 'bcrypt' has no attribute '__about__'`. Pin `bcrypt==4.0.1`.
 
 ---
 
@@ -288,6 +340,9 @@ cd backend
 rm accountguard.db
 python -m app.seed.seed
 ```
+
+### Force Re-seed (Render)
+Set `SEED_FORCE=true` in Render dashboard env vars, redeploy. This drops all tables and re-seeds from scratch. After successful seed, set back to `SEED_FORCE=false`.
 
 ### Retrain ML Model
 ```bash
@@ -320,6 +375,37 @@ The `get_risk_level()`, `get_risk_level_and_action()` helpers and all services w
 1. Add scenario logic in `SimulatorService._generate_login()` or `_generate_transaction()`
 2. Add to `SCENARIOS` list
 3. Frontend auto-displays new events
+
+---
+
+## Key Dependencies
+
+### Backend (`requirements.txt`)
+| Package | Version | Purpose | Gotcha |
+|---------|---------|---------|--------|
+| `fastapi` | latest | Web framework | — |
+| `uvicorn` | latest | ASGI server | — |
+| `sqlalchemy[asyncio]` | 2.0+ | Async ORM | — |
+| `aiosqlite` | latest | SQLite async driver | Local dev only |
+| `asyncpg` | 0.30.0 | PostgreSQL async driver | Production only |
+| `pydantic` | 2.0+ | Data validation | — |
+| `pydantic-settings` | latest | Env var loading | — |
+| `python-jose[cryptography]` | latest | JWT tokens | — |
+| `passlib[bcrypt]` | 1.7.4 | Password hashing | **Pin bcrypt==4.0.1** (see below) |
+| `bcrypt` | 4.0.1 | Password hashing backend | passlib 1.7.4 + bcrypt>=4.1 causes `AttributeError: module 'bcrypt' has no attribute '__about__'` |
+| `scikit-learn` | latest | ML model (RandomForest) | — |
+| `numpy` | latest | Numerical ops | — |
+| `httpx` | latest | HTTP client (for testing) | — |
+
+### Frontend (`package.json`)
+| Package | Purpose |
+|---------|---------|
+| `react` + `react-dom` | UI framework |
+| `react-router-dom` | Client-side routing |
+| `axios` | HTTP client |
+| `recharts` | Charts (3 types: Donut, Bar, Area) |
+| `lucide-react` | Icons |
+| `@tailwindcss/vite` | Tailwind v4 Vite plugin |
 
 ---
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Shield, ArrowLeftRight, Bell, FolderOpen, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react';
 import { getDashboardSummary, getRiskDistribution, getFraudReasons, getLoginTrends } from '../api/dashboardApi';
 import StatCard from '../components/StatCard';
+import Card from '../components/Card';
 import RiskDistributionChart from '../charts/RiskDistributionChart';
 import FraudReasonChart from '../charts/FraudReasonChart';
 import LoginTrendChart from '../charts/LoginTrendChart';
@@ -53,47 +54,48 @@ export default function AdminDashboard() {
   if (error) return <div className="text-danger text-center py-16 text-lg">{error}</div>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-secondary/10 via-secondary/5 to-transparent rounded-xl p-6 sm:p-8 border border-secondary/10">
-        <div className="flex items-center gap-3 mb-2">
-          <BarChart3 size={28} className="text-secondary" />
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Admin Dashboard</h1>
+      <div className="animate-fade-in-up">
+        <div className="flex items-center gap-3 mb-1">
+          <BarChart3 size={22} className="text-accent" aria-hidden="true" />
+          <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">System Overview</h1>
         </div>
-        <p className="text-text-secondary text-sm sm:text-base ml-10">System-wide identity trust overview</p>
+        <p className="text-sm text-text-3 ml-[34px]">Real-time fraud detection metrics</p>
       </div>
 
-      {/* Stats Row 1 */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Users" value={summary?.total_users || 0} icon={Users} color="primary" />
+      {/* Primary stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up stagger-1">
+        <StatCard title="Total Users" value={summary?.total_users || 0} icon={Users} color="accent" />
         <StatCard title="Total Logins" value={summary?.total_logins || 0} icon={Shield} color="info" />
         <StatCard title="Transactions" value={summary?.total_transactions || 0} icon={ArrowLeftRight} color="success" />
         <StatCard title="Alerts" value={summary?.total_alerts || 0} icon={Bell} color="warning" />
       </div>
 
-      {/* Stats Row 2 */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Critical metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in-up stagger-2">
         <StatCard title="High Risk Logins" value={summary?.high_risk_logins || 0} icon={AlertTriangle} color="danger" />
         <StatCard title="Fraud Cases" value={summary?.total_cases || 0} icon={FolderOpen} color="warning" />
         <StatCard title="Blocked Transactions" value={summary?.blocked_transactions || 0} icon={CheckCircle} color="info" />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
-          <h3 className="text-text-primary font-semibold mb-5 text-base">Risk Distribution</h3>
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in-up stagger-3">
+        <Card padding="lg">
+          <h3 className="text-sm font-semibold text-text-1 font-display mb-5">Risk Distribution</h3>
           <RiskDistributionChart data={riskDist} />
-        </div>
-        <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
-          <h3 className="text-text-primary font-semibold mb-5 text-base">Top Fraud Reasons</h3>
+        </Card>
+        <Card padding="lg">
+          <h3 className="text-sm font-semibold text-text-1 font-display mb-5">Top Fraud Reasons</h3>
           <FraudReasonChart data={fraudReasons} />
-        </div>
+        </Card>
       </div>
 
-      <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
-        <h3 className="text-text-primary font-semibold mb-5 text-base">Login Trends (by Hour)</h3>
+      {/* Login trends — full width */}
+      <Card padding="lg" className="animate-fade-in-up stagger-4">
+        <h3 className="text-sm font-semibold text-text-1 font-display mb-5">Login Trends (by Hour)</h3>
         <LoginTrendChart data={loginTrends} />
-      </div>
+      </Card>
     </div>
   );
 }

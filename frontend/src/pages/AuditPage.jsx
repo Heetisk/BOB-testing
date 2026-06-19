@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ScrollText } from 'lucide-react';
 import { getAuditLogs } from '../api/featuresApi';
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
 import { formatDate } from '../utils/helpers';
+import { getRiskTextColor } from '../utils/helpers';
 import Loader from '../components/Loader';
 
 export default function AuditPage() {
@@ -9,74 +12,58 @@ export default function AuditPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLogs();
+    let cancelled = false;
+    getAuditLogs()
+      .then((data) => { if (!cancelled) setLogs(data.logs || []); })
+      .catch(() => console.error('Failed to fetch audit logs'))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
-
-  const fetchLogs = async () => {
-    try {
-      const data = await getAuditLogs();
-      setLogs(data.logs || []);
-    } catch (err) {
-      console.error('Failed to fetch audit logs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getRiskColor = (score) => {
-    if (!score) return 'text-text-muted';
-    if (score <= 30) return 'text-success';
-    if (score <= 70) return 'text-warning';
-    return 'text-danger';
-  };
 
   if (loading) return <Loader text="Loading audit logs..." />;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Audit Logs</h1>
-        <p className="text-text-secondary text-sm sm:text-base mt-2">Privileged access monitoring</p>
+    <div className="space-y-6">
+      <div className="animate-fade-in-up">
+        <div className="flex items-center gap-3 mb-1">
+          <ScrollText size={20} className="text-accent" aria-hidden="true" />
+          <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Audit Logs</h1>
+        </div>
+        <p className="text-sm text-text-3 ml-[32px]">Privileged access monitoring</p>
       </div>
 
-      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead>
-              <tr className="border-b border-border bg-bg-dark/50">
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">ID</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">User</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Action</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Resource</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Risk</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">IP</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log, idx) => (
-                <tr key={log.log_id} className={`border-b border-border/50 hover:bg-bg-card-hover/50 transition-colors ${idx % 2 === 0 ? 'bg-bg-dark/20' : ''}`}>
-                  <td className="px-6 py-4 text-text-primary text-sm font-medium">#{log.log_id}</td>
-                  <td className="px-6 py-4 text-text-secondary text-sm">#{log.user_id}</td>
-                  <td className="px-6 py-4 text-text-primary text-sm font-medium">{log.action}</td>
-                  <td className="px-6 py-4 text-text-secondary text-sm">{log.resource_type}</td>
-                  <td className={`px-6 py-4 text-sm font-semibold ${getRiskColor(log.risk_score)}`}>
-                    {log.risk_score || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 text-text-muted text-sm">{log.ip_address}</td>
-                  <td className="px-6 py-4 text-text-muted text-sm">{formatDate(log.created_at)}</td>
+      <Card padding="none" className="animate-fade-in-up stagger-1">
+        {logs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-surface-3/50">
+                  {['ID', 'User', 'Action', 'Resource', 'Risk', 'IP', 'Time'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-text-3/70 bg-surface-0/50">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {logs.length === 0 && (
-          <div className="text-center py-16 text-text-muted">
-            <ScrollText size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="text-base">No audit logs found</p>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.log_id} className="border-b border-surface-3/30 hover:bg-surface-2/30 transition-colors">
+                    <td className="px-4 py-3 text-sm text-text-2 font-mono">#{log.log_id}</td>
+                    <td className="px-4 py-3 text-sm text-text-2 font-mono">#{log.user_id}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-text-1">{log.action}</td>
+                    <td className="px-4 py-3 text-sm text-text-2">{log.resource_type}</td>
+                    <td className={`px-4 py-3 text-sm font-semibold font-mono ${getRiskTextColor(log.risk_score > 70 ? 'high' : log.risk_score > 30 ? 'medium' : 'low')}`}>
+                      {log.risk_score || 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-3 font-mono">{log.ip_address}</td>
+                    <td className="px-4 py-3 text-xs text-text-3">{formatDate(log.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        ) : (
+          <EmptyState icon={ScrollText} title="No audit logs found" />
         )}
-      </div>
+      </Card>
     </div>
   );
 }

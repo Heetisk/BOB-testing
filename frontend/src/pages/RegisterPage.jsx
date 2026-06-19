@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Eye, EyeOff, ArrowRight } from 'lucide-react';
-
-const CITIES = ['Surat', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Jaipur', 'Lucknow'];
+import { Shield, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
+import { CITIES } from '../utils/constants';
+import Input, { Select } from '../components/Input';
+import Button from '../components/Button';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -39,118 +40,146 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-dark p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+    <div className="min-h-screen flex bg-surface-0">
+      {/* Left panel — Brand */}
+      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-gradient-to-br from-surface-0 via-surface-1 to-surface-0">
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+          backgroundSize: '32px 32px',
+        }} />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px]" />
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-light rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary/20">
-            <Shield size={32} className="text-bg-dark" />
-          </div>
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">
-            AccountGuard <span className="text-primary">AI</span>
-          </h1>
-          <p className="text-text-secondary mt-2 text-base">Create your account</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-7 sm:p-8 space-y-5 shadow-2xl shadow-black/20">
-          {error && (
-            <div className="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-xl">
-              {error}
+        <div className="relative z-10 flex flex-col items-center justify-center w-full px-12">
+          <div className="relative w-48 h-48 mx-auto">
+            <div className="absolute inset-0 rounded-full border-2 border-accent/20 animate-pulse-ring" />
+            <div className="absolute inset-4 rounded-full border-2 border-accent/30" style={{ animation: 'pulseRing 3s ease-in-out infinite 0.5s' }} />
+            <div className="absolute inset-8 rounded-full border-2 border-accent/50" style={{ animation: 'pulseRing 3s ease-in-out infinite 1s' }} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
+                <Shield size={28} className="text-accent" />
+              </div>
             </div>
-          )}
+          </div>
 
-          <div>
-            <label className="block text-text-secondary text-sm font-medium mb-2">Full Name</label>
-            <input
+          <h2 className="mt-10 text-3xl font-bold text-text-1 font-display tracking-tight text-center">
+            Join AccountGuard AI
+          </h2>
+          <p className="mt-3 text-text-3 text-center max-w-sm leading-relaxed">
+            Create your account and experience AI-powered fraud detection in real time.
+          </p>
+
+          <div className="flex items-center gap-6 mt-10">
+            {['Instant Risk Analysis', 'Real-time Alerts', 'ML-Powered'].map((label) => (
+              <div key={label} className="flex items-center gap-2 text-xs text-text-3/60">
+                <CheckCircle size={12} className="text-success/60" aria-hidden="true" />
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel — Register Form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8">
+        <div className="w-full max-w-md animate-fade-in-up">
+          {/* Mobile brand */}
+          <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+              <Shield size={20} className="text-white" aria-hidden="true" />
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold text-text-1 font-display">AccountGuard</span>
+              <span className="text-sm font-semibold text-accent">AI</span>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Create your account</h1>
+            <p className="text-sm text-text-3 mt-1.5">Get started with AccountGuard AI</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-danger-subtle border border-danger/20 text-danger text-sm px-4 py-3 rounded-xl" role="alert">
+                {error}
+              </div>
+            )}
+
+            <Input
+              label="Full Name"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
               placeholder="Enter your full name"
               required
             />
-          </div>
 
-          <div>
-            <label className="block text-text-secondary text-sm font-medium mb-2">Email</label>
-            <input
+            <Input
+              label="Email"
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               required
             />
-          </div>
 
-          <div>
-            <label className="block text-text-secondary text-sm font-medium mb-2">Password</label>
             <div className="relative">
-              <input
+              <Input
+                label="Password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all pr-12"
-                placeholder="Create a password"
+                placeholder="Create a password (min 6 characters)"
                 required
                 minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer p-1"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-3 top-[34px] text-text-3 hover:text-text-1 transition-colors p-1"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Phone (optional)</label>
-              <input
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Phone"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
                 placeholder="+91 98765 43210"
               />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Usual City</label>
-              <select
+              <Select
+                label="City"
                 name="usual_city"
                 value={formData.usual_city}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-              >
-                {CITIES.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
+                options={CITIES.map((c) => ({ value: c, label: c }))}
+              />
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-bg-dark font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30"
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
-            {!loading && <ArrowRight size={18} />}
-          </button>
+            <Button
+              type="submit"
+              fullWidth
+              size="lg"
+              loading={loading}
+              iconRight={!loading ? ArrowRight : undefined}
+            >
+              Create Account
+            </Button>
+          </form>
 
-          <div className="text-center text-text-muted text-sm mt-5 pt-5 border-t border-border">
+          <p className="text-center text-sm text-text-3 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary hover:text-primary-light font-medium transition-colors">
+            <Link to="/login" className="text-accent hover:text-accent-hover font-medium transition-colors">
               Sign In
             </Link>
-          </div>
-        </form>
+          </p>
+        </div>
       </div>
     </div>
   );

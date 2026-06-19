@@ -1,9 +1,29 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Shield, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
+import { CITIES } from '../utils/constants';
+import Input, { Select } from '../components/Input';
+import Button from '../components/Button';
 
-const CITIES = ['Surat', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Jaipur', 'Lucknow'];
+function ShieldVisual() {
+  return (
+    <div className="relative w-48 h-48 mx-auto">
+      {/* Outer ring - slow pulse */}
+      <div className="absolute inset-0 rounded-full border-2 border-accent/20 animate-pulse-ring" />
+      {/* Middle ring */}
+      <div className="absolute inset-4 rounded-full border-2 border-accent/30" style={{ animation: 'pulseRing 3s ease-in-out infinite 0.5s' }} />
+      {/* Inner ring */}
+      <div className="absolute inset-8 rounded-full border-2 border-accent/50" style={{ animation: 'pulseRing 3s ease-in-out infinite 1s' }} />
+      {/* Center shield */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
+          <Shield size={28} className="text-accent" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -40,99 +60,135 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-dark p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+    <div className="min-h-screen flex bg-surface-0">
+      {/* Left panel — Brand + Visualization */}
+      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-gradient-to-br from-surface-0 via-surface-1 to-surface-0">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+          backgroundSize: '32px 32px',
+        }} />
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-light rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary/20">
-            <Shield size={32} className="text-bg-dark" />
+        {/* Gradient orb */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px]" />
+
+        <div className="relative z-10 flex flex-col items-center justify-center w-full px-12">
+          <ShieldVisual />
+
+          <h2 className="mt-10 text-3xl font-bold text-text-1 font-display tracking-tight text-center">
+            Protect what matters
+          </h2>
+          <p className="mt-3 text-text-3 text-center max-w-sm leading-relaxed">
+            Real-time fraud detection powered by machine learning and behavioral analysis.
+          </p>
+
+          {/* Trust signals */}
+          <div className="flex items-center gap-6 mt-10">
+            {['256-bit Encryption', 'SOC 2 Compliant', 'RBI Approved'].map((label) => (
+              <div key={label} className="flex items-center gap-2 text-xs text-text-3/60">
+                <CheckCircle size={12} className="text-success/60" aria-hidden="true" />
+                {label}
+              </div>
+            ))}
           </div>
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">
-            AccountGuard <span className="text-primary">AI</span>
-          </h1>
-          <p className="text-text-secondary mt-2 text-base">Identity Trust Framework</p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-7 sm:p-8 space-y-5 shadow-2xl shadow-black/20">
-          {error && (
-            <div className="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-xl">
-              {error}
+      {/* Right panel — Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8">
+        <div className="w-full max-w-md animate-fade-in-up">
+          {/* Mobile brand */}
+          <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+              <Shield size={20} className="text-white" aria-hidden="true" />
             </div>
-          )}
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold text-text-1 font-display">AccountGuard</span>
+              <span className="text-sm font-semibold text-accent">AI</span>
+            </div>
+          </div>
 
-          <div>
-            <label className="block text-text-secondary text-sm font-medium mb-2">Email</label>
-            <input
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Welcome back</h1>
+            <p className="text-sm text-text-3 mt-1.5">Sign in to your account to continue</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-danger-subtle border border-danger/20 text-danger text-sm px-4 py-3 rounded-xl" role="alert">
+                {error}
+              </div>
+            )}
+
+            <Input
+              label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-              placeholder="Enter your email"
+              placeholder="user@example.com"
               required
             />
-          </div>
 
-          <div>
-            <label className="block text-text-secondary text-sm font-medium mb-2">Password</label>
             <div className="relative">
-              <input
+              <Input
+                label="Password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all pr-12"
                 placeholder="Enter your password"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer p-1"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-3 top-[34px] text-text-3 hover:text-text-1 transition-colors p-1"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-text-secondary text-sm font-medium mb-2">Login City</label>
-            <select
+            <Select
+              label="Login City"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+              options={CITIES.map((c) => ({ value: c, label: c }))}
+            />
+            <p className="text-[11px] text-text-3/60 -mt-2">Try a different city than your usual to trigger risk detection</p>
+
+            <Button
+              type="submit"
+              fullWidth
+              size="lg"
+              loading={loading}
+              iconRight={!loading ? ArrowRight : undefined}
             >
-              {CITIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <p className="text-text-muted text-xs mt-1.5">Try a different city than your usual to trigger risk detection</p>
-          </div>
+              Sign In
+            </Button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-bg-dark font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-            {!loading && <ArrowRight size={18} />}
-          </button>
-
-          <div className="text-center text-text-muted text-sm mt-5 pt-5 border-t border-border">
+          <p className="text-center text-sm text-text-3 mt-6">
             Don&apos;t have an account?{' '}
-            <Link to="/register" className="text-primary hover:text-primary-light font-medium transition-colors">
+            <Link to="/register" className="text-accent hover:text-accent-hover font-medium transition-colors">
               Create Account
             </Link>
-          </div>
+          </p>
 
-          <div className="text-center text-text-muted text-xs mt-3">
-            <p className="font-medium mb-2">Demo Accounts</p>
-            <div className="space-y-1">
-              <p>Customer: <span className="text-text-secondary">user@example.com</span> / <span className="text-text-secondary">password123</span></p>
-              <p>Admin: <span className="text-text-secondary">admin@example.com</span> / <span className="text-text-secondary">admin123</span></p>
+          {/* Demo accounts */}
+          <div className="mt-8 p-4 bg-surface-1 border border-surface-3/50 rounded-xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-3/60 mb-2">Demo Accounts</p>
+            <div className="space-y-1.5 text-xs text-text-3">
+              <div className="flex justify-between">
+                <span>Customer</span>
+                <span className="font-mono text-text-2">user@example.com / password123</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Admin</span>
+                <span className="font-mono text-text-2">admin@example.com / admin123</span>
+              </div>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

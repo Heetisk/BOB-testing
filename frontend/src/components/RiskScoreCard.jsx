@@ -1,61 +1,84 @@
-export default function RiskScoreCard({ score, level, reasons = [] }) {
-  const getScoreColor = (score) => {
-    if (score <= 30) return 'text-success';
-    if (score <= 70) return 'text-warning';
-    return 'text-danger';
+export default function RiskScoreCard({ score = 0, level, reasons = [] }) {
+  const normalizedScore = Math.min(Math.max(score, 0), 100);
+
+  const getLevel = (s) => {
+    if (s <= 30) return 'Low';
+    if (s <= 70) return 'Medium';
+    return 'High';
   };
 
-  const getProgressColor = (score) => {
-    if (score <= 30) return 'bg-success';
-    if (score <= 70) return 'bg-warning';
-    return 'bg-danger';
+  const riskLevel = level || getLevel(normalizedScore);
+
+  const colorMap = {
+    Low: { stroke: '#34D399', text: 'text-success', bg: 'bg-success-subtle', ring: 'text-success' },
+    Medium: { stroke: '#FBBF24', text: 'text-warning', bg: 'bg-warning-subtle', ring: 'text-warning' },
+    High: { stroke: '#F43F5E', text: 'text-danger', bg: 'bg-danger-subtle', ring: 'text-danger' },
   };
 
-  const getLevelLabel = (score) => {
-    if (score <= 30) return 'Low Risk';
-    if (score <= 70) return 'Medium Risk';
-    return 'High Risk';
-  };
+  const colors = colorMap[riskLevel] || colorMap.Low;
+
+  const circumference = 2 * Math.PI * 52;
+  const dashOffset = circumference - (normalizedScore / 100) * circumference;
 
   return (
-    <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <p className="text-text-muted text-xs font-medium uppercase tracking-wide">Risk Score</p>
-          <p className={`text-3xl sm:text-4xl font-bold mt-1 tabular-nums ${getScoreColor(score)}`}>
-            {score}
-          </p>
-          <p className="text-text-secondary text-sm mt-1">{getLevelLabel(score)}</p>
+    <div className="bg-surface-1 border border-surface-3/50 rounded-2xl p-6 transition-all duration-150 hover:border-surface-3">
+      <div className="flex flex-col items-center">
+        {/* Risk Ring */}
+        <div className="relative w-36 h-36">
+          <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120" role="img" aria-label={`Risk score: ${normalizedScore}, level ${riskLevel}`}>
+            {/* Background ring */}
+            <circle
+              cx="60"
+              cy="60"
+              r="52"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="6"
+              className="text-surface-3/30"
+            />
+            {/* Score ring */}
+            <circle
+              cx="60"
+              cy="60"
+              r="52"
+              fill="none"
+              stroke={colors.stroke}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={dashOffset}
+              className="transition-all duration-1000 ease-out"
+              style={{ filter: `drop-shadow(0 0 6px ${colors.stroke}40)` }}
+            />
+          </svg>
+          {/* Center content */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className={`text-3xl font-bold font-display tabular-nums ${colors.text}`}>
+              {normalizedScore}
+            </span>
+            <span className="text-[10px] font-medium text-text-3 uppercase tracking-wider mt-0.5">
+              {riskLevel}
+            </span>
+          </div>
         </div>
-        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-          score <= 30 ? 'bg-success/10' : score <= 70 ? 'bg-warning/10' : 'bg-danger/10'
-        }`}>
-          <span className={`text-2xl font-bold ${getScoreColor(score)}`}>{score}</span>
-        </div>
-      </div>
 
-      <div className="w-full h-2.5 bg-border/50 rounded-full overflow-hidden mb-5">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ease-out ${getProgressColor(score)}`}
-          style={{ width: `${Math.min(score, 100)}%` }}
-        />
+        {/* Risk factors */}
+        {reasons.length > 0 && (
+          <div className="w-full mt-5 space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-3/70">
+              Risk Factors
+            </p>
+            <div className="space-y-1.5">
+              {reasons.map((reason, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm text-text-2">
+                  <span className={`w-1 h-1 rounded-full mt-2 shrink-0 ${colors.text === 'text-success' ? 'bg-success' : colors.text === 'text-warning' ? 'bg-warning' : 'bg-danger'}`} />
+                  {reason}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-
-      {reasons.length > 0 && (
-        <div className="border-t border-border pt-4">
-          <p className="text-text-muted text-xs font-semibold uppercase tracking-wider mb-3">
-            Risk Factors
-          </p>
-          <ul className="space-y-2">
-            {reasons.map((reason, index) => (
-              <li key={index} className="text-text-secondary text-sm flex items-start gap-2.5">
-                <span className="text-warning mt-0.5 shrink-0">&#9679;</span>
-                <span className="leading-relaxed">{reason}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

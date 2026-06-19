@@ -3,6 +3,10 @@ import { ArrowLeftRight, Plus, X } from 'lucide-react';
 import { getTransactions, createTransaction } from '../api/transactionApi';
 import { useAuth } from '../context/AuthContext';
 import RiskBadge from '../components/RiskBadge';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import EmptyState from '../components/EmptyState';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import Loader from '../components/Loader';
 
@@ -18,22 +22,29 @@ export default function TransactionsPage() {
     city: '',
   });
 
-  useEffect(() => {
-    fetchTransactions();
-    const interval = setInterval(fetchTransactions, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchTransactions = async () => {
     try {
       const data = await getTransactions();
       setTransactions(data.transactions || []);
-    } catch (err) {
+    } catch {
       console.error('Failed to fetch transactions');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchAndSet = () => {
+      getTransactions()
+        .then((data) => { if (!cancelled) setTransactions(data.transactions || []); })
+        .catch(() => console.error('Failed to fetch transactions'))
+        .finally(() => { if (!cancelled) setLoading(false); });
+    };
+    fetchAndSet();
+    const interval = setInterval(fetchAndSet, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,135 +57,94 @@ export default function TransactionsPage() {
       setShowForm(false);
       setFormData({ amount: '', beneficiary_id: '', beneficiary_name: '', city: '' });
       fetchTransactions();
-    } catch (err) {
+    } catch {
       console.error('Failed to create transaction');
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusStyle = (status) => {
     switch (status) {
-      case 'approved': return 'bg-success/10 text-success';
-      case 'blocked': return 'bg-danger/10 text-danger';
-      case 'flagged': return 'bg-warning/10 text-warning';
-      default: return 'bg-text-muted/10 text-text-muted';
+      case 'approved': return 'text-success bg-success-subtle';
+      case 'blocked': return 'text-danger bg-danger-subtle';
+      case 'flagged': return 'text-warning bg-warning-subtle';
+      default: return 'text-text-3 bg-surface-2';
     }
   };
 
   if (loading) return <Loader text="Loading transactions..." />;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between animate-fade-in-up">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Transactions</h1>
-          <p className="text-text-secondary text-sm sm:text-base mt-2">Monitor and analyze transactions</p>
+          <div className="flex items-center gap-3 mb-1">
+            <ArrowLeftRight size={20} className="text-accent" aria-hidden="true" />
+            <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Transactions</h1>
+          </div>
+          <p className="text-sm text-text-3 ml-[32px]">Monitor and analyze financial transactions</p>
         </div>
-        <button
+        <Button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-bg-dark font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-lg shadow-primary/20 hover:shadow-primary/30"
+          variant={showForm ? 'secondary' : 'primary'}
+          icon={showForm ? X : Plus}
+          aria-expanded={showForm}
         >
-          {showForm ? <X size={18} /> : <Plus size={18} />}
           {showForm ? 'Cancel' : 'New Transaction'}
-        </button>
+        </Button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-6 sm:p-7 space-y-5">
-          <h3 className="text-text-primary font-semibold text-base">Create Transaction</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Amount (INR)</label>
-              <input
-                type="number"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                required
-              />
+        <Card padding="lg" className="animate-slide-down">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <h3 className="text-sm font-semibold text-text-1 font-display">Create Transaction</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Amount (INR)" type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
+              <Input label="Beneficiary ID" value={formData.beneficiary_id} onChange={(e) => setFormData({ ...formData, beneficiary_id: e.target.value })} placeholder="B001" required />
+              <Input label="Beneficiary Name" value={formData.beneficiary_name} onChange={(e) => setFormData({ ...formData, beneficiary_name: e.target.value })} placeholder="Rajesh Kumar" required />
+              <Input label="City" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Surat" required />
             </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Beneficiary ID</label>
-              <input
-                value={formData.beneficiary_id}
-                onChange={(e) => setFormData({ ...formData, beneficiary_id: e.target.value })}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="B001"
-                required
-              />
+            <div className="flex gap-2">
+              <Button type="submit" size="md">Submit</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
             </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Beneficiary Name</label>
-              <input
-                value={formData.beneficiary_name}
-                onChange={(e) => setFormData({ ...formData, beneficiary_name: e.target.value })}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="Rajesh Kumar"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">City</label>
-              <input
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="Surat"
-                required
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button type="submit" className="px-6 py-2.5 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-bg-dark font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-lg shadow-primary/20">
-              Submit
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5 bg-bg-dark hover:bg-bg-card-hover text-text-secondary rounded-xl transition-colors cursor-pointer border border-border">
-              Cancel
-            </button>
-          </div>
-        </form>
+          </form>
+        </Card>
       )}
 
-      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead>
-              <tr className="border-b border-border bg-bg-dark/50">
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">ID</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Amount</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Beneficiary</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">City</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Risk</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Status</th>
-                <th className="text-left text-text-muted text-xs font-semibold uppercase tracking-wider px-6 py-4">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx, idx) => (
-                <tr key={tx.transaction_id} className={`border-b border-border/50 hover:bg-bg-card-hover/50 transition-colors ${idx % 2 === 0 ? 'bg-bg-dark/20' : ''}`}>
-                  <td className="px-6 py-4 text-text-primary text-sm font-medium">#{tx.transaction_id}</td>
-                  <td className="px-6 py-4 text-text-primary text-sm font-semibold">{formatCurrency(tx.amount)}</td>
-                  <td className="px-6 py-4 text-text-secondary text-sm">{tx.beneficiary_name}</td>
-                  <td className="px-6 py-4 text-text-secondary text-sm">{tx.city}</td>
-                  <td className="px-6 py-4"><RiskBadge level={tx.risk_score > 70 ? 'High' : tx.risk_score > 30 ? 'Medium' : 'Low'} size="sm" /></td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(tx.status)}`}>
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-text-muted text-sm">{formatDate(tx.transaction_time)}</td>
+      <Card padding="none" className="animate-fade-in-up stagger-1">
+        {transactions.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-surface-3/50">
+                  {['ID', 'Amount', 'Beneficiary', 'City', 'Risk', 'Status', 'Date'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-text-3/70 bg-surface-0/50">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {transactions.length === 0 && (
-          <div className="text-center py-16 text-text-muted">
-            <ArrowLeftRight size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="text-base">No transactions found</p>
-            <p className="text-sm mt-1">Create a transaction to get started</p>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.transaction_id} className="border-b border-surface-3/30 hover:bg-surface-2/30 transition-colors">
+                    <td className="px-4 py-3 text-sm text-text-2 font-mono">#{tx.transaction_id}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-text-1 font-mono">{formatCurrency(tx.amount)}</td>
+                    <td className="px-4 py-3 text-sm text-text-2">{tx.beneficiary_name}</td>
+                    <td className="px-4 py-3 text-sm text-text-2">{tx.city}</td>
+                    <td className="px-4 py-3"><RiskBadge level={tx.risk_score > 70 ? 'High' : tx.risk_score > 30 ? 'Medium' : 'Low'} size="sm" /></td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusStyle(tx.status)}`}>
+                        {tx.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-3">{formatDate(tx.transaction_time)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        ) : (
+          <EmptyState icon={ArrowLeftRight} title="No transactions found" description="Create a transaction to get started" />
         )}
-      </div>
+      </Card>
     </div>
   );
 }

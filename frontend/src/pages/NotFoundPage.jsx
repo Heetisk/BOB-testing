@@ -1,21 +1,18 @@
 import { Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Button from '../components/Button';
 
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-dark relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      <div className="text-center relative z-10">
-        <div className="w-20 h-20 rounded-2xl bg-bg-card border border-border flex items-center justify-center mx-auto mb-6">
-          <Shield size={40} className="text-text-muted" />
+    <div className="min-h-screen flex items-center justify-center bg-surface-0">
+      <div className="text-center animate-scale-in">
+        <div className="w-16 h-16 rounded-2xl bg-surface-1 border border-surface-3/50 flex items-center justify-center mx-auto mb-5">
+          <Shield size={32} className="text-text-3/40" aria-hidden="true" />
         </div>
-        <h1 className="text-5xl font-bold text-text-primary mb-3">404</h1>
-        <p className="text-text-secondary text-lg mb-8">Page not found</p>
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-light text-bg-dark font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-primary/20"
-        >
-          Go to Dashboard
+        <h1 className="text-5xl font-bold text-text-1 font-display mb-2">404</h1>
+        <p className="text-text-3 text-base mb-6">Page not found</p>
+        <Link to="/dashboard">
+          <Button size="lg">Go to Dashboard</Button>
         </Link>
       </div>
     </div>

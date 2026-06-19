@@ -1,51 +1,93 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #F59E0B;
-  --color-primary-light: #FBBF24;
+  /* Typography */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Surface colors (darkest to lightest) */
+  --color-surface-0: #0B1120;
+  --color-surface-1: #131B2E;
+  --color-surface-2: #1A2540;
+  --color-surface-3: #2A3550;
+
+  /* Text hierarchy */
+  --color-text-1: #E8ECF4;
+  --color-text-2: #C8D0E0;
+  --color-text-3: #8B95B0;
+
+  /* Primary accent — Sapphire */
+  --color-accent: #3B7BF7;
+  --color-accent-hover: #5B93FF;
+  --color-accent-active: #2A5BC0;
+  --color-accent-subtle: rgba(59, 123, 247, 0.08);
+
+  /* Semantic colors */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-danger: #F43F5E;
+  --color-info: #38BDF8;
+
+  /* Semantic subtle backgrounds */
+  --color-success-subtle: rgba(52, 211, 153, 0.08);
+  --color-warning-subtle: rgba(251, 191, 36, 0.08);
+  --color-danger-subtle: rgba(244, 63, 94, 0.08);
+  --color-info-subtle: rgba(56, 189, 248, 0.08);
+
+  /* Legacy token aliases (for gradual migration) */
+  --color-primary: #3B7BF7;
+  --color-primary-light: #5B93FF;
   --color-secondary: #8B5CF6;
-  --color-bg-dark: #0F172A;
-  --color-bg-card: #1E293B;
-  --color-bg-card-hover: #263548;
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-text-muted: #64748B;
-  --color-border: #334155;
-  --color-border-light: #475569;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-info: #3B82F6;
-  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-card-hover: 0 10px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
-  --shadow-glow-primary: 0 0 20px rgba(245, 158, 11, 0.15);
-  --shadow-glow-danger: 0 0 20px rgba(239, 68, 68, 0.15);
+  --color-bg-dark: #0B1120;
+  --color-bg-card: #131B2E;
+  --color-bg-card-hover: #1A2540;
+  --color-text-primary: #E8ECF4;
+  --color-text-secondary: #C8D0E0;
+  --color-text-muted: #8B95B0;
+  --color-border: #2A3550;
+  --color-border-light: #3A4560;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 10px 30px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-glow-accent: 0 0 24px rgba(59, 123, 247, 0.15);
+  --shadow-glow-danger: 0 0 24px rgba(244, 63, 94, 0.15);
+  --shadow-glow-success: 0 0 24px rgba(52, 211, 153, 0.15);
 }
 
-* {
+/* ─── Reset & Base ─────────────────────────────────── */
+
+*, *::before, *::after {
   margin: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: var(--font-sans);
-  background-color: var(--color-bg-dark);
-  color: var(--color-text-primary);
+html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-surface-0);
+  color: var(--color-text-2);
   line-height: 1.6;
+  font-feature-settings: "tnum" 1;
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Scrollbar */
+/* ─── Scrollbar ────────────────────────────────────── */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -53,39 +95,44 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+  background: var(--color-surface-3);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-light);
+  background: var(--color-text-3);
 }
 
-/* Focus ring */
+/* ─── Focus Ring ───────────────────────────────────── */
+
 *:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-/* Selection */
+/* ─── Selection ────────────────────────────────────── */
+
 ::selection {
-  background: rgba(245, 158, 11, 0.3);
-  color: var(--color-text-primary);
+  background: rgba(59, 123, 247, 0.25);
+  color: var(--color-text-1);
 }
 
-/* Smooth transitions for interactive elements */
+/* ─── Interactive Elements ─────────────────────────── */
+
 button, a, input, select, textarea {
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-/* Input placeholder */
+/* ─── Input Placeholder ────────────────────────────── */
+
 ::placeholder {
-  color: var(--color-text-muted);
-  opacity: 0.7;
+  color: var(--color-text-3);
+  opacity: 0.6;
 }
 
-/* Disable spin buttons on number inputs */
+/* ─── Number Inputs ────────────────────────────────── */
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -95,7 +142,8 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* Table containment - prevent overflow */
+/* ─── Tables ───────────────────────────────────────── */
+
 table {
   table-layout: auto;
 }
@@ -110,15 +158,168 @@ td.truncate, td.max-w-xs {
   text-overflow: ellipsis;
 }
 
-/* Page content padding */
-.page-content {
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* ─── Animations ───────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@media (min-width: 640px) {
-  .page-content {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseRing {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 123, 247, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 123, 247, 0);
+  }
+}
+
+/* ─── Animation Utilities ──────────────────────────── */
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out both;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.25s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s ease-out both;
+}
+
+.animate-pulse-ring {
+  animation: pulseRing 3s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-1) 25%,
+    var(--color-surface-2) 50%,
+    var(--color-surface-1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 2s linear infinite;
+}
+
+/* Staggered animation delay utility */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+
+/* ─── Reduced Motion ───────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
   }
 }

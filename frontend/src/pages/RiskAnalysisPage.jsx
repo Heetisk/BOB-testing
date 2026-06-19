@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Shield, Search, ChevronRight } from 'lucide-react';
+import { Shield, Search } from 'lucide-react';
 import { analyzeLoginRisk } from '../api/riskApi';
 import { useAuth } from '../context/AuthContext';
 import RiskScoreCard from '../components/RiskScoreCard';
 import RiskBadge from '../components/RiskBadge';
-import Loader from '../components/Loader';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import EmptyState from '../components/EmptyState';
 
 export default function RiskAnalysisPage() {
   const { user } = useAuth();
@@ -43,159 +46,78 @@ export default function RiskAnalysisPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Risk Analysis</h1>
-        <p className="text-text-secondary text-sm sm:text-base mt-2">Analyze login risk with AI-powered detection</p>
+    <div className="space-y-6">
+      <div className="animate-fade-in-up">
+        <div className="flex items-center gap-3 mb-1">
+          <Shield size={20} className="text-accent" aria-hidden="true" />
+          <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Risk Analysis</h1>
+        </div>
+        <p className="text-sm text-text-3 ml-[32px]">Analyze login risk with AI-powered detection</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-6 sm:p-7 space-y-5">
-          <h3 className="text-text-primary font-semibold flex items-center gap-2.5 text-base">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Shield size={18} className="text-primary" />
-            </div>
-            Login Risk Analysis
-          </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card padding="lg" className="animate-fade-in-up stagger-1">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <h3 className="text-sm font-semibold text-text-1 font-display flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Shield size={14} className="text-accent" aria-hidden="true" />
+              </div>
+              Login Parameters
+            </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Device ID</label>
-              <input
-                name="device_id"
-                value={formData.device_id}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="device_001"
-                required
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Device ID" name="device_id" value={formData.device_id} onChange={handleChange} placeholder="device_001" required />
+              <Input label="Device Name" name="device_name" value={formData.device_name} onChange={handleChange} placeholder="Android Pixel 7" required />
+              <Input label="Browser" name="browser" value={formData.browser} onChange={handleChange} placeholder="Chrome" required />
+              <Input label="OS" name="os" value={formData.os} onChange={handleChange} placeholder="Android" required />
+              <Input label="City" name="city" value={formData.city} onChange={handleChange} placeholder="Surat" required />
+              <Input label="IP Address" name="ip_address" value={formData.ip_address} onChange={handleChange} placeholder="192.168.1.100" required />
             </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Device Name</label>
-              <input
-                name="device_name"
-                value={formData.device_name}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="Android Pixel 7"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">Browser</label>
-              <input
-                name="browser"
-                value={formData.browser}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="Chrome"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">OS</label>
-              <input
-                name="os"
-                value={formData.os}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="Android"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">City</label>
-              <input
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="Surat"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-text-secondary text-sm font-medium mb-2">IP Address</label>
-              <input
-                name="ip_address"
-                value={formData.ip_address}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-bg-dark border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="192.168.1.100"
-                required
-              />
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-bg-dark font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/20 hover:shadow-primary/30"
-          >
-            <Search size={18} />
-            {loading ? 'Analyzing...' : 'Analyze Risk'}
-          </button>
+            {error && (
+              <div className="bg-danger-subtle border border-danger/20 text-danger text-sm px-4 py-3 rounded-xl" role="alert">
+                {error}
+              </div>
+            )}
 
-          {error && (
-            <div className="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-xl">
-              {error}
-            </div>
-          )}
-        </form>
+            <Button type="submit" fullWidth size="md" loading={loading} icon={Search}>
+              Analyze Risk
+            </Button>
+          </form>
+        </Card>
 
-        <div className="space-y-5">
-          {result && (
+        <div className="space-y-4 animate-fade-in-up stagger-2">
+          {result ? (
             <>
               <RiskScoreCard
                 score={result.risk_score}
                 level={result.risk_level}
                 reasons={result.risk_reasons}
               />
-              <div className="bg-bg-card border border-border rounded-xl p-6 sm:p-7">
-                <h3 className="text-text-primary font-semibold mb-5 text-base">Analysis Details</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-2 border-b border-border/50">
-                    <span className="text-text-secondary text-sm">Risk Level</span>
-                    <RiskBadge level={result.risk_level} />
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border/50">
-                    <span className="text-text-secondary text-sm">New Device</span>
-                    <span className={`text-sm font-medium ${result.is_new_device ? 'text-warning' : 'text-success'}`}>
-                      {result.is_new_device ? 'Yes' : 'No'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border/50">
-                    <span className="text-text-secondary text-sm">New Location</span>
-                    <span className={`text-sm font-medium ${result.is_new_location ? 'text-warning' : 'text-success'}`}>
-                      {result.is_new_location ? 'Yes' : 'No'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border/50">
-                    <span className="text-text-secondary text-sm">Recommended Action</span>
-                    <span className="text-text-primary text-sm font-medium flex items-center gap-1">
-                      {result.recommended_action}
-                      <ChevronRight size={14} className="text-text-muted" />
-                    </span>
-                  </div>
-                  {result.ml_prediction && (
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-text-secondary text-sm">ML Model</span>
-                      <span className="text-text-primary text-sm font-medium">
-                        {(result.ml_prediction.fraud_probability * 100).toFixed(1)}% fraud probability
-                      </span>
+              <Card padding="lg">
+                <h3 className="text-sm font-semibold text-text-1 font-display mb-4">Analysis Details</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Risk Level', value: <RiskBadge level={result.risk_level} /> },
+                    { label: 'New Device', value: <span className={`text-sm font-medium ${result.is_new_device ? 'text-warning' : 'text-success'}`}>{result.is_new_device ? 'Yes' : 'No'}</span> },
+                    { label: 'New Location', value: <span className={`text-sm font-medium ${result.is_new_location ? 'text-warning' : 'text-success'}`}>{result.is_new_location ? 'Yes' : 'No'}</span> },
+                    { label: 'Action', value: <span className="text-sm font-medium text-text-1">{result.recommended_action}</span> },
+                    ...(result.ml_prediction ? [{ label: 'ML Model', value: <span className="text-sm font-medium text-text-1 font-mono">{(result.ml_prediction.fraud_probability * 100).toFixed(1)}%</span> }] : []),
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between py-2 border-b border-surface-3/30 last:border-0">
+                      <span className="text-sm text-text-3">{item.label}</span>
+                      {item.value}
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
+              </Card>
             </>
-          )}
-
-          {!result && !loading && (
-            <div className="bg-bg-card border border-border rounded-xl p-12 sm:p-16 text-center">
-              <Shield size={48} className="text-text-muted mx-auto mb-4 opacity-50" />
-              <p className="text-text-muted text-base">Enter login details to analyze risk</p>
-              <p className="text-text-muted text-sm mt-1">Results will appear here</p>
-            </div>
+          ) : (
+            <EmptyState
+              icon={Shield}
+              title="Enter login details"
+              description="Results will appear here after analysis"
+            />
           )}
         </div>
       </div>

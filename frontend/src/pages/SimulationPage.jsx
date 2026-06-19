@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Play, Pause, Zap, Shield, ArrowLeftRight, Bell,
-  Activity
+  Play, Pause, Zap, Shield, ArrowLeftRight, Bell, Activity
 } from 'lucide-react';
 import { getSimulationStatus, startSimulation, stopSimulation } from '../api/simulationApi';
 import { useAuth } from '../context/AuthContext';
@@ -15,50 +14,46 @@ export default function SimulationPage() {
   const [loading, setLoading] = useState(true);
   const [speed, setSpeed] = useState(2.0);
   const eventSourceRef = useRef(null);
-  const eventsEndRef = useRef(null);
   const pollingRef = useRef(null);
   const lastEventCount = useRef(0);
 
-  useEffect(() => {
-    fetchStatus();
-    return () => {
-      disconnectSSE();
-      stopPolling();
-    };
-  }, []);
+  const disconnectSSE = () => {
+    if (eventSourceRef.current) { eventSourceRef.current.close(); eventSourceRef.current = null; }
+  };
 
-  useEffect(() => {
-    if (status?.running) {
-      connectSSE();
-    } else {
-      disconnectSSE();
-    }
-  }, [status?.running]);
-
-  useEffect(() => {
-    eventsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [events]);
+  const stopPolling = () => {
+    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+  };
 
   const fetchStatus = async () => {
     try {
       const data = await getSimulationStatus();
       setStatus(data);
       setEvents(data.recent_events || []);
-    } catch (err) {
-      console.error('Failed to fetch status');
-    } finally {
-      setLoading(false);
-    }
+    } catch { console.error('Failed to fetch status'); }
+    finally { setLoading(false); }
+  };
+
+  const startPolling = () => {
+    stopPolling();
+    pollingRef.current = setInterval(async () => {
+      try {
+        const data = await getSimulationStatus();
+        setStatus(data);
+        const newEvents = data.recent_events || [];
+        if (newEvents.length > lastEventCount.current) {
+          setEvents(newEvents.slice(0, 50));
+          lastEventCount.current = newEvents.length;
+        }
+      } catch { console.error('Polling error'); }
+    }, 2500);
   };
 
   const connectSSE = () => {
     disconnectSSE();
     stopPolling();
 
-    const eventSource = new EventSource(
-      `/api/v1/simulation/stream?token=${token}`
-    );
-
+    const eventSource = new EventSource(`/api/v1/simulation/stream?token=${token}`);
     let sseFailed = false;
 
     eventSource.onmessage = (event) => {
@@ -76,61 +71,40 @@ export default function SimulationPage() {
         } else if (data.type === 'status') {
           setStatus(data.data);
         }
-      } catch (e) {
-        console.error('SSE parse error:', e);
-      }
+      } catch (e) { console.error('SSE parse error:', e); }
     };
 
     eventSource.onerror = () => {
-      if (!sseFailed) {
-        sseFailed = true;
-        eventSource.close();
-        startPolling();
-      }
+      if (!sseFailed) { sseFailed = true; eventSource.close(); startPolling(); }
     };
-
     eventSourceRef.current = eventSource;
   };
 
-  const startPolling = () => {
-    stopPolling();
-    pollingRef.current = setInterval(async () => {
-      try {
-        const data = await getSimulationStatus();
-        setStatus(data);
-
-        const newEvents = data.recent_events || [];
-        if (newEvents.length > lastEventCount.current) {
-          setEvents(newEvents.slice(0, 50));
-          lastEventCount.current = newEvents.length;
+  useEffect(() => {
+    let cancelled = false;
+    getSimulationStatus()
+      .then((data) => {
+        if (!cancelled) {
+          setStatus(data);
+          setEvents(data.recent_events || []);
         }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-    }, 2500);
-  };
+      })
+      .catch(() => console.error('Failed to fetch status'))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; disconnectSSE(); stopPolling(); };
+  }, []);
 
-  const stopPolling = () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  };
-
-  const disconnectSSE = () => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-  };
+  useEffect(() => {
+    if (status?.running) connectSSE();
+    else { disconnectSSE(); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status?.running]);
 
   const handleStart = async () => {
     try {
       await startSimulation(status?.speed || speed);
       await fetchStatus();
-    } catch (err) {
-      console.error('Failed to start simulation');
-    }
+    } catch { console.error('Failed to start'); }
   };
 
   const handleStop = async () => {
@@ -139,21 +113,14 @@ export default function SimulationPage() {
       disconnectSSE();
       stopPolling();
       await fetchStatus();
-    } catch (err) {
-      console.error('Failed to stop simulation');
-    }
+    } catch { console.error('Failed to stop'); }
   };
 
-  const getEventIcon = (type) => {
-    if (type === 'login') return <Shield size={16} className="text-info" />;
-    return <ArrowLeftRight size={16} className="text-success" />;
-  };
-
-  const getRiskBg = (level) => {
+  const getRiskBorder = (level) => {
     switch (level) {
-      case 'High': return 'border-danger/30 bg-danger/5';
-      case 'Medium': return 'border-warning/30 bg-warning/5';
-      default: return 'border-success/30 bg-success/5';
+      case 'High': return 'border-l-danger';
+      case 'Medium': return 'border-l-warning';
+      default: return 'border-l-success';
     }
   };
 
@@ -161,18 +128,23 @@ export default function SimulationPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-fade-in-up">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Traffic Simulator</h1>
-          <p className="text-text-secondary text-sm sm:text-base mt-2">Generate live user activities with real-time risk detection</p>
+          <div className="flex items-center gap-3 mb-1">
+            <Activity size={20} className="text-accent" aria-hidden="true" />
+            <h1 className="text-2xl font-bold text-text-1 font-display tracking-tight">Traffic Simulator</h1>
+          </div>
+          <p className="text-sm text-text-3 ml-[32px]">Generate live user activities with real-time risk detection</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-bg-card border border-border rounded-xl px-4 py-2">
-            <Zap size={16} className="text-primary" />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-surface-1 border border-surface-3/50 rounded-lg px-3 py-1.5">
+            <Zap size={14} className="text-accent" />
+            <label htmlFor="sim-speed" className="sr-only">Simulation speed</label>
             <select
+              id="sim-speed"
               value={speed}
               onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer"
+              className="bg-transparent text-text-2 text-xs focus:outline-none cursor-pointer"
               disabled={status?.running}
             >
               <option value={0.5}>Fast (0.5s)</option>
@@ -184,93 +156,77 @@ export default function SimulationPage() {
           {status?.running ? (
             <button
               onClick={handleStop}
-              className="flex items-center gap-2 px-5 py-2.5 bg-danger hover:bg-danger/80 text-white font-semibold rounded-xl transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-danger hover:bg-danger/90 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              <Pause size={18} />
-              Stop
+              <Pause size={14} /> Stop
             </button>
           ) : (
             <button
               onClick={handleStart}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-success to-success/80 hover:from-success/80 hover:to-success text-white font-semibold rounded-xl transition-all cursor-pointer shadow-lg shadow-success/20"
+              className="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
             >
-              <Play size={18} />
-              Start Simulation
+              <Play size={14} /> Start
             </button>
           )}
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-2 text-text-muted text-xs font-medium uppercase tracking-wide mb-2">
-            <Activity size={14} />
-            Total Events
+      <div className="grid grid-cols-4 gap-3 animate-fade-in-up stagger-1">
+        {[
+          { label: 'Events', value: status?.total_events || 0, icon: Activity, color: 'text-text-2' },
+          { label: 'Logins', value: status?.login_count || 0, icon: Shield, color: 'text-info' },
+          { label: 'Transactions', value: status?.transaction_count || 0, icon: ArrowLeftRight, color: 'text-success' },
+          { label: 'Alerts', value: status?.alert_count || 0, icon: Bell, color: 'text-warning' },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-surface-1 border border-surface-3/50 rounded-xl p-4 transition-all duration-150 hover:border-surface-3">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-3/60 mb-1.5">
+              <stat.icon size={12} aria-hidden="true" />
+              {stat.label}
+            </div>
+            <p className={`text-xl font-bold font-display tabular-nums ${stat.color}`}>{stat.value}</p>
           </div>
-          <p className="text-2xl font-bold text-text-primary tabular-nums">{status?.total_events || 0}</p>
-        </div>
-        <div className="bg-bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-2 text-text-muted text-xs font-medium uppercase tracking-wide mb-2">
-            <Shield size={14} />
-            Logins
-          </div>
-          <p className="text-2xl font-bold text-info tabular-nums">{status?.login_count || 0}</p>
-        </div>
-        <div className="bg-bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-2 text-text-muted text-xs font-medium uppercase tracking-wide mb-2">
-            <ArrowLeftRight size={14} />
-            Transactions
-          </div>
-          <p className="text-2xl font-bold text-success tabular-nums">{status?.transaction_count || 0}</p>
-        </div>
-        <div className="bg-bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-2 text-text-muted text-xs font-medium uppercase tracking-wide mb-2">
-            <Bell size={14} />
-            Alerts
-          </div>
-          <p className="text-2xl font-bold text-warning tabular-nums">{status?.alert_count || 0}</p>
-        </div>
+        ))}
       </div>
 
-      {/* Live Feed */}
-      <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-text-primary font-semibold flex items-center gap-2">
-            <Activity size={18} className="text-primary" />
+      <div className="bg-surface-1 border border-surface-3/50 rounded-2xl overflow-hidden animate-fade-in-up stagger-2">
+        <div className="px-5 py-3.5 border-b border-surface-3/50 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-text-1 font-display flex items-center gap-2">
+            <Activity size={15} className="text-accent" />
             Live Event Feed
           </h3>
           {status?.running && (
-            <span className="flex items-center gap-2 text-success text-sm">
-              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            <span className="flex items-center gap-1.5 text-success text-xs font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               Live
             </span>
           )}
         </div>
         <div className="max-h-[500px] overflow-y-auto">
           {events.length > 0 ? (
-            <div className="divide-y divide-border/50">
+            <div className="divide-y divide-surface-3/30">
               {events.map((event, idx) => (
                 <div
                   key={event.event_id || idx}
-                  className={`px-6 py-4 hover:bg-bg-card-hover/50 transition-colors border-l-4 ${getRiskBg(event.risk_level)}`}
+                  className={`px-5 py-3.5 hover:bg-surface-2/30 transition-colors border-l-[3px] ${getRiskBorder(event.risk_level)}`}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5 min-w-0">
                       <div className="mt-0.5 shrink-0">
-                        {getEventIcon(event.event_type)}
+                        {event.event_type === 'login'
+                          ? <Shield size={14} className="text-info" />
+                          : <ArrowLeftRight size={14} className="text-success" />}
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-text-primary text-sm font-semibold">{event.user_name}</span>
-                          <span className="text-text-muted text-xs">#{event.user_id}</span>
-                          <span className="text-text-muted text-xs">in {event.city}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-sm font-medium text-text-1">{event.user_name}</span>
+                          <span className="text-[10px] text-text-3/60">#{event.user_id}</span>
+                          <span className="text-[10px] text-text-3/60">in {event.city}</span>
                         </div>
-                        <p className="text-text-secondary text-sm mt-0.5">{event.description}</p>
+                        <p className="text-xs text-text-3 mt-0.5">{event.description}</p>
                         {event.details?.reasons?.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
+                          <div className="flex flex-wrap gap-1 mt-1.5">
                             {event.details.reasons.slice(0, 2).map((reason, i) => (
-                              <span key={i} className="text-xs bg-bg-dark px-2 py-0.5 rounded-full text-text-muted">
+                              <span key={i} className="text-[10px] bg-surface-0 px-2 py-0.5 rounded-md text-text-3/70">
                                 {reason}
                               </span>
                             ))}
@@ -280,21 +236,18 @@ export default function SimulationPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <RiskBadge level={event.risk_level} size="sm" />
-                      <p className="text-text-muted text-xs mt-1 tabular-nums">Score: {event.risk_score}</p>
-                      <p className="text-text-muted text-xs mt-0.5">
-                        {event.action_taken}
-                      </p>
+                      <p className="text-[10px] text-text-3/60 mt-1 font-mono tabular-nums">{event.risk_score}</p>
+                      <p className="text-[10px] text-text-3/60 mt-0.5">{event.action_taken}</p>
                     </div>
                   </div>
                 </div>
               ))}
-              <div ref={eventsEndRef} />
             </div>
           ) : (
-            <div className="text-center py-16 text-text-muted">
-              <Activity size={48} className="mx-auto mb-4 opacity-50" />
-              <p className="text-base">No events yet</p>
-              <p className="text-sm mt-1">Start the simulation to see live traffic</p>
+            <div className="text-center py-16">
+              <Activity size={36} className="mx-auto mb-3 text-text-3/30" />
+              <p className="text-sm text-text-3">No events yet</p>
+              <p className="text-xs text-text-3/60 mt-1">Start the simulation to see live traffic</p>
             </div>
           )}
         </div>
