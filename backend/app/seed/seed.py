@@ -7,7 +7,6 @@ alerts, fraud cases, and new feature data for hackathon demonstration.
 
 import asyncio
 import os
-import sys
 import random
 from datetime import datetime, timedelta
 import hashlib

@@ -45,6 +45,8 @@ export default function AdminDashboard() {
       }
     };
     fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) return <Loader text="Loading dashboard..." />;

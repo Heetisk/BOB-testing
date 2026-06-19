@@ -11,6 +11,8 @@ export default function CasesPage() {
 
   useEffect(() => {
     fetchCases();
+    const interval = setInterval(fetchCases, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchCases = async () => {
