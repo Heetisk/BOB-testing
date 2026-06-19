@@ -6,8 +6,9 @@ alerts, fraud cases, and new feature data for hackathon demonstration.
 """
 
 import asyncio
+import os
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import hashlib
 
 from app.core.database import AsyncSessionLocal, engine, Base
@@ -88,42 +89,62 @@ DEVICES = [
 
 async def seed_database():
     """Seed the database with demo data."""
+    force = os.getenv("SEED_FORCE", "false").lower() == "true"
+
     async with engine.begin() as conn:
+        if force:
+            print("SEED_FORCE=true — dropping all tables...")
+            await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as db:
         from sqlalchemy import select, func
         result = await db.execute(select(func.count(User.user_id)))
-        if result.scalar() > 0:
-            print("Database already seeded. Skipping...")
-            return
+        user_count = result.scalar() or 0
+
+        if user_count > 0 and not force:
+            login_count = await db.execute(select(func.count(LoginEvent.login_id)))
+            if (login_count.scalar() or 0) > 0:
+                print("Database already seeded. Skipping...")
+                return
+            print("Partial seed detected (users exist but no login events). Re-seeding...")
 
         print("Seeding database...")
         now = datetime.utcnow()
 
-        # Create users
+        # Create or load users
         users = []
+        existing = await db.execute(select(User))
+        existing_users = {u.email: u for u in existing.scalars().all()}
         for user_data in USERS:
-            user = User(
-                name=user_data["name"],
-                email=user_data["email"],
-                password_hash=hash_password(user_data["password"]),
-                phone=user_data["phone"],
-                role=user_data["role"],
-                usual_city=user_data["usual_city"],
-                usual_device=user_data["usual_device"],
-            )
-            db.add(user)
-            users.append(user)
+            if user_data["email"] in existing_users:
+                users.append(existing_users[user_data["email"]])
+            else:
+                user = User(
+                    name=user_data["name"],
+                    email=user_data["email"],
+                    password_hash=hash_password(user_data["password"]),
+                    phone=user_data["phone"],
+                    role=user_data["role"],
+                    usual_city=user_data["usual_city"],
+                    usual_device=user_data["usual_device"],
+                )
+                db.add(user)
+                users.append(user)
         await db.flush()
 
-        # Create devices
+        # Create devices (skip if already exist)
         devices = []
+        existing_devs = await db.execute(select(Device))
+        existing_device_ids = {d.device_id for d in existing_devs.scalars().all()}
         for i, user in enumerate(users[:3]):
             for j in range(2):
                 device_template = DEVICES[j % len(DEVICES)]
+                dev_id = f"device_{user.user_id}_{j}"
+                if dev_id in existing_device_ids:
+                    continue
                 device = Device(
-                    device_id=f"device_{user.user_id}_{j}",
+                    device_id=dev_id,
                     user_id=user.user_id,
                     device_name=device_template["device_name"],
                     browser=device_template["browser"],

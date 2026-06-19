@@ -31,3 +31,5 @@ services:
         value: "app/ml/model/model.pkl"
       - key: SCALER_PATH
         value: "app/ml/model/scaler.pkl"
+      - key: SEED_FORCE
+        value: "true"
