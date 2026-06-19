@@ -40,7 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(api_router, prefix="/api/v1")
 
     # Health check endpoint
-    @app.get("/health")
+    @app.api_route("/health", methods=["GET", "HEAD"])
     async def health_check():
         return {"status": "healthy", "version": settings.APP_VERSION}
 

@@ -26,19 +26,30 @@ export default function CustomerDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [s, l, t, d, a] = await Promise.all([
+        const [summaryRes, loginsRes, txRes, devicesRes, alertsRes] = await Promise.allSettled([
           getCustomerSummary(),
           getCustomerRecentLogins(),
           getCustomerRecentTransactions(),
           getCustomerDevices(),
           getCustomerAlerts(),
         ]);
-        setSummary(s);
-        setLogins(l.logins || []);
-        setTransactions(t.transactions || []);
-        setDevices(d.devices || []);
-        setAlerts(a.alerts || []);
+
+        if (summaryRes.status === 'fulfilled') setSummary(summaryRes.value);
+        if (loginsRes.status === 'fulfilled') setLogins(loginsRes.value?.logins || []);
+        if (txRes.status === 'fulfilled') setTransactions(txRes.value?.transactions || []);
+        if (devicesRes.status === 'fulfilled') setDevices(devicesRes.value?.devices || []);
+        if (alertsRes.status === 'fulfilled') setAlerts(alertsRes.value?.alerts || []);
+
+        const failed = [summaryRes, loginsRes, txRes, devicesRes, alertsRes]
+          .filter((r) => r.status === 'rejected');
+        if (failed.length > 0) {
+          console.error('Dashboard partial load failure:', failed.map((r) => r.reason?.message || r.reason));
+        }
+        if (summaryRes.status === 'rejected') {
+          setError('Failed to load dashboard summary');
+        }
       } catch (err) {
+        console.error('Dashboard load error:', err.response?.data || err.message);
         setError('Failed to load dashboard');
       } finally {
         setLoading(false);

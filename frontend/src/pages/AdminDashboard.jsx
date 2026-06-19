@@ -18,17 +18,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [summaryData, riskData, fraudData, trendData] = await Promise.all([
+        const [summaryRes, riskRes, fraudRes, trendRes] = await Promise.allSettled([
           getDashboardSummary(),
           getRiskDistribution(),
           getFraudReasons(),
           getLoginTrends(),
         ]);
-        setSummary(summaryData);
-        setRiskDist(riskData);
-        setFraudReasons(fraudData);
-        setLoginTrends(trendData);
+
+        if (summaryRes.status === 'fulfilled') setSummary(summaryRes.value);
+        if (riskRes.status === 'fulfilled') setRiskDist(riskRes.value);
+        if (fraudRes.status === 'fulfilled') setFraudReasons(fraudRes.value);
+        if (trendRes.status === 'fulfilled') setLoginTrends(trendRes.value);
+
+        const failed = [summaryRes, riskRes, fraudRes, trendRes].filter((r) => r.status === 'rejected');
+        if (failed.length > 0) {
+          console.error('Dashboard partial load failure:', failed.map((r) => r.reason?.message || r.reason));
+        }
+        if (summaryRes.status === 'rejected') {
+          setError('Failed to load dashboard summary');
+        }
       } catch (err) {
+        console.error('Dashboard load error:', err.response?.data || err.message);
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
