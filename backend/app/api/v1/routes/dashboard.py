@@ -128,7 +128,7 @@ async def get_login_trends(
     # For demo, return hourly distribution
     result = await db.execute(
         select(
-            func.strftime("%H", LoginEvent.login_time).label("hour"),
+            func.extract("hour", LoginEvent.login_time).label("hour"),
             func.count(LoginEvent.login_id),
         )
         .group_by("hour")
