@@ -7,7 +7,7 @@ Monitors session behavior and detects anomalies.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from dataclasses import dataclass
 
 from app.models.session_event import SessionEvent
@@ -121,7 +121,7 @@ class SessionService:
 
     async def _check_velocity(self, user_id: int, session_token: str) -> int:
         """Check action velocity in the session."""
-        cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+        cutoff = datetime.utcnow() - timedelta(minutes=5)
         result = await self.db.execute(
             select(func.count(SessionEvent.event_id)).where(
                 SessionEvent.user_id == user_id,
@@ -133,7 +133,7 @@ class SessionService:
 
     async def _check_concurrent_sessions(self, user_id: int) -> int:
         """Count concurrent sessions for a user."""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+        cutoff = datetime.utcnow() - timedelta(hours=1)
         result = await self.db.execute(
             select(func.count(func.distinct(SessionEvent.session_token))).where(
                 SessionEvent.user_id == user_id,

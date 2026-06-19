@@ -6,7 +6,7 @@ Handles login and transaction risk analysis.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.core.database import get_db
 from app.api.dependencies import get_current_user
@@ -62,7 +62,7 @@ async def analyze_login_risk(
         os=request.os,
         city=request.city,
         ip_address=request.ip_address,
-        login_time=request.login_time or datetime.now(timezone.utc),
+        login_time=request.login_time or datetime.utcnow(),
     )
 
     return LoginRiskResponse(

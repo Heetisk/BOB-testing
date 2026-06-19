@@ -7,7 +7,7 @@ Handles OTP generation, verification, and trusted device management.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import hashlib
 import secrets
 
@@ -55,7 +55,7 @@ class VerificationService:
             device_id=device_id,
             city=city,
             ip_address=ip_address,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+            expires_at=datetime.utcnow() + timedelta(minutes=5),
             risk_score=risk_score,
         )
         self.db.add(verification)
@@ -88,7 +88,7 @@ class VerificationService:
             return False, "No pending verification found"
 
         # Check expiration
-        if datetime.now(timezone.utc) > verification.expires_at:
+        if datetime.utcnow() > verification.expires_at:
             return False, "Verification code expired"
 
         # Check max attempts

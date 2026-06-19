@@ -7,7 +7,7 @@ transaction, and ML analysis to produce a comprehensive risk score.
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional
 from dataclasses import dataclass
 
@@ -59,7 +59,7 @@ class RiskService:
 
     async def _get_failed_attempts(self, user_id: int, hours: int = 24) -> int:
         """Count failed login attempts in the last N hours."""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
         result = await self.db.execute(
             select(func.count(LoginEvent.login_id)).where(
                 LoginEvent.user_id == user_id,
@@ -124,7 +124,7 @@ class RiskService:
         a risk score with explainable reasons.
         """
         if login_time is None:
-            login_time = datetime.now(timezone.utc)
+            login_time = datetime.utcnow()
 
         # Check device risk
         is_new_device = await self.device_service.is_new_device(user.user_id, device_id)
@@ -269,11 +269,11 @@ class RiskService:
         ml_prediction = predict_fraud(
             is_new_device=False,
             is_new_location=is_new_location,
-            login_hour=datetime.now(timezone.utc).hour,
+            login_hour=datetime.utcnow().hour,
             failed_attempts=0,
             amount=amount,
             is_new_beneficiary=is_new_beneficiary,
-            transaction_hour=datetime.now(timezone.utc).hour,
+            transaction_hour=datetime.utcnow().hour,
         )
 
         # Combine scores

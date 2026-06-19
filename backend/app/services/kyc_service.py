@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.models.kyc_verification import KycVerification
 from app.models.user import User
@@ -68,7 +68,7 @@ class KycService:
     async def get_failed_kyc_attempts(self, user_id: int, hours: int = 24) -> int:
         """Count failed KYC attempts in the last N hours."""
         from datetime import timedelta
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
         result = await self.db.execute(
             select(func.count(KycVerification.kyc_id)).where(
                 KycVerification.user_id == user_id,
@@ -118,7 +118,7 @@ class KycService:
             reasons.append(f"{failed_attempts} previous failed KYC attempt(s)")
 
         # Night submission (10 PM - 5 AM)
-        current_hour = datetime.now(timezone.utc).hour
+        current_hour = datetime.utcnow().hour
         if is_unusual_hour(current_hour):
             score += 10
             reasons.append("KYC submitted during unusual hours")

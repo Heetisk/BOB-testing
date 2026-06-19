@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import secrets
 
 from app.models.password_reset import PasswordReset
@@ -37,7 +37,7 @@ class RecoveryService:
 
     async def _get_recent_resets(self, user_id: int, hours: int = 24) -> int:
         """Count recent password reset attempts."""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
         result = await self.db.execute(
             select(func.count(PasswordReset.reset_id)).where(
                 PasswordReset.user_id == user_id,
@@ -48,7 +48,7 @@ class RecoveryService:
 
     async def _has_recent_failed_logins(self, user_id: int, hours: int = 1) -> bool:
         """Check if there were failed logins recently before reset request."""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
         result = await self.db.execute(
             select(func.count(LoginEvent.login_id)).where(
                 LoginEvent.user_id == user_id,
@@ -108,7 +108,7 @@ class RecoveryService:
             reasons.append("Reset requested after failed login attempts")
 
         # Night reset (10 PM - 5 AM)
-        current_hour = datetime.now(timezone.utc).hour
+        current_hour = datetime.utcnow().hour
         if is_unusual_hour(current_hour):
             score += 10
             reasons.append("Reset requested during unusual hours")
@@ -154,7 +154,7 @@ class RecoveryService:
             device_id=device_id,
             city=city,
             ip_address=ip_address,
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+            expires_at=datetime.utcnow() + timedelta(hours=1),
             risk_score=risk_result.risk_score,
             risk_level=risk_result.risk_level,
         )
@@ -177,7 +177,7 @@ class RecoveryService:
             return None
 
         # Check expiration
-        if datetime.now(timezone.utc) > reset.expires_at:
+        if datetime.utcnow() > reset.expires_at:
             return None
 
         return reset

@@ -7,7 +7,7 @@ Handles consent management, data masking, and access logging.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.models.privacy import ConsentRecord, DataAccessLog
 from app.models.user import User
@@ -87,7 +87,7 @@ class PrivacyService:
         consent = result.scalar_one_or_none()
         if consent:
             consent.is_granted = False
-            consent.revoked_at = datetime.now(timezone.utc)
+            consent.revoked_at = datetime.utcnow()
             await self.db.flush()
             return True
         return False

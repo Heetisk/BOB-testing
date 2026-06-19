@@ -36,7 +36,7 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
         )
 
     # Perform risk analysis
-    from datetime import datetime, timezone
+    from datetime import datetime
     risk_result = await risk_service.analyze_login_risk(
         user=user,
         device_id=request.device_id,
@@ -45,7 +45,7 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
         os=request.os,
         city=request.city,
         ip_address=request.ip_address,
-        login_time=datetime.now(timezone.utc),
+        login_time=datetime.utcnow(),
     )
 
     # Create JWT token

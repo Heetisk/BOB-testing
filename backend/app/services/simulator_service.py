@@ -9,7 +9,7 @@ import asyncio
 import logging
 import random
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 from dataclasses import dataclass, field
 
@@ -177,30 +177,30 @@ class SimulatorService:
         if scenario == "normal_login":
             city = user.usual_city or random.choice(CITIES)
             device_id = f"device_{user.user_id}_0"
-            login_time = datetime.now(timezone.utc)
+            login_time = datetime.utcnow()
         elif scenario == "new_city_login":
             other_cities = [c for c in CITIES if c != user.usual_city]
             city = random.choice(other_cities)
             device_id = f"device_{user.user_id}_0"
-            login_time = datetime.now(timezone.utc)
+            login_time = datetime.utcnow()
         elif scenario == "night_login":
             city = user.usual_city or random.choice(CITIES)
             device_id = f"device_{user.user_id}_0"
             hour = random.choice([1, 2, 3, 4, 23])
-            login_time = datetime.now(timezone.utc).replace(hour=hour, minute=random.randint(0, 59))
+            login_time = datetime.utcnow().replace(hour=hour, minute=random.randint(0, 59))
         elif scenario == "impossible_travel":
             other_cities = [c for c in CITIES if c != user.usual_city]
             city = random.choice(other_cities)
             device_id = f"device_unknown_{user.user_id}"
-            login_time = datetime.now(timezone.utc)
+            login_time = datetime.utcnow()
         elif scenario == "failed_attempts":
             city = random.choice(CITIES)
             device_id = f"device_unknown_{user.user_id}"
-            login_time = datetime.now(timezone.utc)
+            login_time = datetime.utcnow()
         else:
             city = random.choice(CITIES)
             device_id = f"device_{user.user_id}_{random.randint(0, 2)}"
-            login_time = datetime.now(timezone.utc)
+            login_time = datetime.utcnow()
 
         ip_address = f"{random.randint(10, 200)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 254)}"
 
@@ -223,7 +223,7 @@ class SimulatorService:
 
         event = SimulationEvent(
             event_id=str(uuid.uuid4())[:8],
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.utcnow().isoformat(),
             event_type="login",
             user_id=user.user_id,
             user_name=user.name,
@@ -286,7 +286,7 @@ class SimulatorService:
 
         event = SimulationEvent(
             event_id=str(uuid.uuid4())[:8],
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.utcnow().isoformat(),
             event_type="transaction",
             user_id=user.user_id,
             user_name=user.name,

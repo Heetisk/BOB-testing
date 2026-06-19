@@ -7,7 +7,7 @@ Handles fraud case management.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.models.fraud_case import FraudCase
 
@@ -71,7 +71,7 @@ class CaseService:
         case = await self.get_case(case_id)
         if case:
             case.case_status = case_status
-            case.updated_at = datetime.now(timezone.utc)
+            case.updated_at = datetime.utcnow()
             if admin_notes:
                 case.admin_notes = admin_notes
             await self.db.flush()

@@ -7,7 +7,7 @@ Tracks admin actions and detects suspicious behavior.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import json
 
 from app.models.audit_log import AuditLog
@@ -96,12 +96,12 @@ class AuditService:
             score += high_risk_actions[action]
 
         # Check for unusual hours (10 PM - 5 AM)
-        current_hour = datetime.now(timezone.utc).hour
+        current_hour = datetime.utcnow().hour
         if is_unusual_hour(current_hour):
             score += 15
 
         # Check for rapid actions
-        cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+        cutoff = datetime.utcnow() - timedelta(minutes=5)
         result = await self.db.execute(
             select(func.count(AuditLog.log_id)).where(
                 AuditLog.user_id == user_id,

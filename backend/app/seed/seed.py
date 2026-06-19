@@ -99,7 +99,7 @@ async def seed_database():
             return
 
         print("Seeding database...")
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
 
         # Create users
         users = []

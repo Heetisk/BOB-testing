@@ -7,7 +7,7 @@ Handles device detection, trust management, and device history.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.models.device import Device
 
@@ -58,7 +58,7 @@ class DeviceService:
         device = await self.get_device(user_id, device_id)
 
         if device:
-            device.last_seen = datetime.now(timezone.utc)
+            device.last_seen = datetime.utcnow()
             if is_trusted:
                 device.is_trusted = True
         else:
