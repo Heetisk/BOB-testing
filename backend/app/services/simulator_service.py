@@ -20,6 +20,7 @@ from app.core.database import AsyncSessionLocal
 from app.models.user import User
 from app.services.auth_service import AuthService
 from app.services.risk_service import RiskService
+from app.services.transaction_service import TransactionService
 
 logger = logging.getLogger(__name__)
 
@@ -277,6 +278,27 @@ class SimulatorService:
             beneficiary_id=beneficiary[0],
             beneficiary_name=beneficiary[1],
             city=city,
+        )
+
+        # Persist transaction to database
+        transaction_service = TransactionService(db)
+        if risk_result.risk_level == "High":
+            tx_status = "blocked"
+        elif risk_result.risk_level == "Medium":
+            tx_status = "flagged"
+        else:
+            tx_status = "approved"
+
+        await transaction_service.create_transaction(
+            user_id=user.user_id,
+            amount=amount,
+            beneficiary_id=beneficiary[0],
+            beneficiary_name=beneficiary[1],
+            city=city,
+            transaction_type="transfer",
+            is_new_beneficiary=risk_result.is_new_beneficiary,
+            risk_score=risk_result.risk_score,
+            status=tx_status,
         )
 
         self.transaction_count += 1
