@@ -32,6 +32,6 @@ services:
       - key: SCALER_PATH
         value: "app/ml/model/scaler.pkl"
       - key: SEED_FORCE
-        value: "true"
+        value: "false"
       - key: PYTHONUNBUFFERED
         value: "1"

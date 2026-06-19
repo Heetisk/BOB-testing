@@ -10,19 +10,33 @@ import Loader from '../components/Loader';
 export default function CasesPage() {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchAndSet = () => {
       apiClient.get('/cases/')
-        .then((data) => { if (!cancelled) setCases(data.data.cases || []); })
-        .catch(() => console.error('Failed to fetch cases'))
+        .then((data) => {
+          if (!cancelled) {
+            setCases(data.data.cases || []);
+            setError(null);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch cases:', err);
+          if (!cancelled) {
+            const status = err.response?.status;
+            if (status === 401) return;
+            if (status === 403) setError('You do not have permission to view cases.');
+            else setError('Failed to load cases.');
+          }
+        })
         .finally(() => { if (!cancelled) setLoading(false); });
     };
 
     fetchAndSet();
-    const interval = setInterval(fetchAndSet, 5000);
+    const interval = setInterval(fetchAndSet, 15000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
@@ -46,6 +60,12 @@ export default function CasesPage() {
         </div>
         <p className="text-sm text-text-3 ml-[32px]">Manage and investigate fraud cases</p>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-xl bg-danger-subtle border border-danger/20 text-danger text-sm animate-fade-in">
+          {error}
+        </div>
+      )}
 
       <Card padding="none" className="animate-fade-in-up stagger-1">
         {cases.length > 0 ? (
@@ -77,7 +97,7 @@ export default function CasesPage() {
             </table>
           </div>
         ) : (
-          <EmptyState icon={FolderOpen} title="No fraud cases found" />
+          <EmptyState icon={FolderOpen} title={error ? 'Unable to load cases' : 'No fraud cases found'} description={error || undefined} />
         )}
       </Card>
     </div>

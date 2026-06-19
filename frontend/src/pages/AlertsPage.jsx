@@ -8,6 +8,7 @@ import Loader from '../components/Loader';
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
@@ -16,16 +17,27 @@ export default function AlertsPage() {
     const fetchAndSet = () => {
       getAlerts()
         .then((data) => {
-          if (!cancelled) setAlerts(data.alerts || []);
+          if (!cancelled) {
+            setAlerts(data.alerts || []);
+            setError(null);
+          }
         })
-        .catch(() => console.error('Failed to fetch alerts'))
+        .catch((err) => {
+          console.error('Failed to fetch alerts:', err);
+          if (!cancelled) {
+            const status = err.response?.status;
+            if (status === 401) return;
+            if (status === 403) setError('You do not have permission to view alerts.');
+            else setError('Failed to load alerts. Retrying...');
+          }
+        })
         .finally(() => {
           if (!cancelled) setLoading(false);
         });
     };
 
     fetchAndSet();
-    const interval = setInterval(fetchAndSet, 5000);
+    const interval = setInterval(fetchAndSet, 15000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
@@ -45,6 +57,12 @@ export default function AlertsPage() {
         </div>
         <p className="text-sm text-text-3 ml-[32px]">Monitor suspicious activity alerts</p>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-xl bg-danger-subtle border border-danger/20 text-danger text-sm animate-fade-in">
+          {error}
+        </div>
+      )}
 
       {/* Filter pills */}
       <div className="flex flex-wrap gap-1.5 animate-fade-in-up stagger-1">
@@ -69,7 +87,7 @@ export default function AlertsPage() {
           <AlertCard key={alert.alert_id} alert={alert} />
         ))}
         {filteredAlerts.length === 0 && (
-          <EmptyState icon={Bell} title="No alerts found" description="All clear for now" />
+          <EmptyState icon={Bell} title={error ? 'Unable to load alerts' : 'No alerts found'} description={error ? 'Check your connection and try again' : 'All clear for now'} />
         )}
       </div>
     </div>

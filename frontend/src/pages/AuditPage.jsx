@@ -10,12 +10,26 @@ import Loader from '../components/Loader';
 export default function AuditPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     getAuditLogs()
-      .then((data) => { if (!cancelled) setLogs(data.logs || []); })
-      .catch(() => console.error('Failed to fetch audit logs'))
+      .then((data) => {
+        if (!cancelled) {
+          setLogs(data.logs || []);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch audit logs:', err);
+        if (!cancelled) {
+          const status = err.response?.status;
+          if (status === 401) return;
+          if (status === 403) setError('Audit logs require admin or fraud team access.');
+          else setError('Failed to load audit logs.');
+        }
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
@@ -31,6 +45,12 @@ export default function AuditPage() {
         </div>
         <p className="text-sm text-text-3 ml-[32px]">Privileged access monitoring</p>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-xl bg-danger-subtle border border-danger/20 text-danger text-sm animate-fade-in">
+          {error}
+        </div>
+      )}
 
       <Card padding="none" className="animate-fade-in-up stagger-1">
         {logs.length > 0 ? (
@@ -61,7 +81,7 @@ export default function AuditPage() {
             </table>
           </div>
         ) : (
-          <EmptyState icon={ScrollText} title="No audit logs found" />
+          <EmptyState icon={ScrollText} title={error ? 'Access restricted' : 'No audit logs found'} description={error || 'Audit logs will appear here'} />
         )}
       </Card>
     </div>

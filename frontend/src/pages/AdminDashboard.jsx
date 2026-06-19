@@ -26,17 +26,23 @@ export default function AdminDashboard() {
           getLoginTrends(),
         ]);
 
-        if (summaryRes.status === 'fulfilled') setSummary(summaryRes.value);
+        if (summaryRes.status === 'fulfilled') {
+          setSummary(summaryRes.value);
+        } else {
+          const status = summaryRes.reason?.response?.status;
+          if (status === 401) return;
+          if (status === 403) setError('Dashboard requires admin access.');
+          else if (status) setError(`Failed to load dashboard (HTTP ${status}). Check backend status.`);
+          else setError('Failed to connect to backend. The server may be starting up (30-60s on free tier).');
+        }
+
         if (riskRes.status === 'fulfilled') setRiskDist(riskRes.value);
         if (fraudRes.status === 'fulfilled') setFraudReasons(fraudRes.value);
         if (trendRes.status === 'fulfilled') setLoginTrends(trendRes.value);
 
         const failed = [summaryRes, riskRes, fraudRes, trendRes].filter((r) => r.status === 'rejected');
-        if (failed.length > 0) {
+        if (failed.length > 0 && !error) {
           console.error('Dashboard partial load failure:', failed.map((r) => r.reason?.message || r.reason));
-        }
-        if (summaryRes.status === 'rejected') {
-          setError('Failed to load dashboard summary');
         }
       } catch (err) {
         console.error('Dashboard load error:', err.response?.data || err.message);
@@ -46,7 +52,7 @@ export default function AdminDashboard() {
       }
     };
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(fetchData, 15000);
     return () => clearInterval(interval);
   }, []);
 

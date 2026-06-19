@@ -14,6 +14,7 @@ export default function KycPage() {
   const { user } = useAuth();
   const [kyc, setKyc] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     document_type: 'Aadhaar',
@@ -24,8 +25,26 @@ export default function KycPage() {
   useEffect(() => {
     let cancelled = false;
     getKycStatus(user.user_id)
-      .then((data) => { if (!cancelled) setKyc(data); })
-      .catch(() => {})
+      .then((data) => {
+        if (!cancelled) {
+          setKyc(data);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          const status = err.response?.status;
+          if (status === 401) return;
+          if (status === 404) {
+            setKyc(null);
+            setError(null);
+          } else if (status === 403) {
+            setError('You do not have permission to view KYC status.');
+          } else {
+            setError('Failed to load KYC status.');
+          }
+        }
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [user.user_id]);
@@ -57,6 +76,12 @@ export default function KycPage() {
           {showForm ? 'Cancel' : 'Submit KYC'}
         </Button>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-xl bg-danger-subtle border border-danger/20 text-danger text-sm animate-fade-in">
+          {error}
+        </div>
+      )}
 
       {showForm && (
         <Card padding="lg" className="animate-slide-down">
@@ -110,7 +135,7 @@ export default function KycPage() {
           </div>
         </Card>
       ) : (
-        <EmptyState icon={FileCheck} title="No KYC verification found" description="Submit your documents for verification" />
+        <EmptyState icon={FileCheck} title={error ? 'Unable to load KYC status' : 'No KYC verification found'} description={error || 'Submit your documents for verification'} />
       )}
     </div>
   );

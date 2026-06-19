@@ -14,6 +14,7 @@ export default function TransactionsPage() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     amount: '',
@@ -22,27 +23,29 @@ export default function TransactionsPage() {
     city: '',
   });
 
-  const fetchTransactions = async () => {
-    try {
-      const data = await getTransactions();
-      setTransactions(data.transactions || []);
-    } catch {
-      console.error('Failed to fetch transactions');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     let cancelled = false;
     const fetchAndSet = () => {
       getTransactions()
-        .then((data) => { if (!cancelled) setTransactions(data.transactions || []); })
-        .catch(() => console.error('Failed to fetch transactions'))
+        .then((data) => {
+          if (!cancelled) {
+            setTransactions(data.transactions || []);
+            setError(null);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch transactions:', err);
+          if (!cancelled) {
+            const status = err.response?.status;
+            if (status === 401) return;
+            if (status === 403) setError('You do not have permission to view transactions.');
+            else setError('Failed to load transactions. Retrying...');
+          }
+        })
         .finally(() => { if (!cancelled) setLoading(false); });
     };
     fetchAndSet();
-    const interval = setInterval(fetchAndSet, 5000);
+    const interval = setInterval(fetchAndSet, 15000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
@@ -56,7 +59,9 @@ export default function TransactionsPage() {
       });
       setShowForm(false);
       setFormData({ amount: '', beneficiary_id: '', beneficiary_name: '', city: '' });
-      fetchTransactions();
+      getTransactions()
+        .then((data) => setTransactions(data.transactions || []))
+        .catch(() => {});
     } catch {
       console.error('Failed to create transaction');
     }
@@ -92,6 +97,12 @@ export default function TransactionsPage() {
           {showForm ? 'Cancel' : 'New Transaction'}
         </Button>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-xl bg-danger-subtle border border-danger/20 text-danger text-sm animate-fade-in">
+          {error}
+        </div>
+      )}
 
       {showForm && (
         <Card padding="lg" className="animate-slide-down">
@@ -142,7 +153,7 @@ export default function TransactionsPage() {
             </table>
           </div>
         ) : (
-          <EmptyState icon={ArrowLeftRight} title="No transactions found" description="Create a transaction to get started" />
+          <EmptyState icon={ArrowLeftRight} title={error ? 'Unable to load transactions' : 'No transactions found'} description={error ? 'Check your connection and try again' : 'Create a transaction to get started'} />
         )}
       </Card>
     </div>
