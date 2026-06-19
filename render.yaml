@@ -24,7 +24,7 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         sync: false
-        value: '["https://accountguard-ai.vercel.app", "https://accountguard-frontend.onrender.com"]'
+        value: '["https://accountguard-ai.vercel.app", "https://bob-testing-1.onrender.com"]'
       - key: DEBUG
         value: "false"
       - key: MODEL_PATH
