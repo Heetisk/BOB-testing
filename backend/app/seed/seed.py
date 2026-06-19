@@ -7,6 +7,7 @@ alerts, fraud cases, and new feature data for hackathon demonstration.
 
 import asyncio
 import os
+import sys
 import random
 from datetime import datetime, timedelta
 import hashlib
@@ -93,7 +94,7 @@ async def seed_database():
 
     async with engine.begin() as conn:
         if force:
-            print("SEED_FORCE=true — dropping all tables...")
+            print("SEED_FORCE=true — dropping all tables...", flush=True)
             await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
@@ -105,11 +106,11 @@ async def seed_database():
         if user_count > 0 and not force:
             login_count = await db.execute(select(func.count(LoginEvent.login_id)))
             if (login_count.scalar() or 0) > 0:
-                print("Database already seeded. Skipping...")
+                print("Database already seeded. Skipping...", flush=True)
                 return
-            print("Partial seed detected (users exist but no login events). Re-seeding...")
+            print("Partial seed detected (users exist but no login events). Re-seeding...", flush=True)
 
-        print("Seeding database...")
+        print("Seeding database...", flush=True)
         now = datetime.utcnow()
 
         # Create or load users
@@ -392,20 +393,20 @@ async def seed_database():
 
         await db.commit()
 
-        print(f"Seeded:")
-        print(f"  - {len(users)} users")
-        print(f"  - {len(devices)} devices")
-        print(f"  - {len(login_events)} login events")
-        print(f"  - {len(transactions)} transactions")
-        print(f"  - {len(alerts)} alerts")
-        print(f"  - {len(cases)} fraud cases")
-        print(f"  - {len(kyc_records)} KYC verifications")
-        print(f"  - {len(resets)} password resets")
-        print(f"  - {len(audit_logs)} audit logs")
-        print(f"  - {len(session_events)} session events")
-        print(f"  - {len(verifications)} verification requests")
-        print(f"  - {len(consents)} consent records")
-        print("Database seeded successfully!")
+        print(f"Seeded:", flush=True)
+        print(f"  - {len(users)} users", flush=True)
+        print(f"  - {len(devices)} devices", flush=True)
+        print(f"  - {len(login_events)} login events", flush=True)
+        print(f"  - {len(transactions)} transactions", flush=True)
+        print(f"  - {len(alerts)} alerts", flush=True)
+        print(f"  - {len(cases)} fraud cases", flush=True)
+        print(f"  - {len(kyc_records)} KYC verifications", flush=True)
+        print(f"  - {len(resets)} password resets", flush=True)
+        print(f"  - {len(audit_logs)} audit logs", flush=True)
+        print(f"  - {len(session_events)} session events", flush=True)
+        print(f"  - {len(verifications)} verification requests", flush=True)
+        print(f"  - {len(consents)} consent records", flush=True)
+        print("Database seeded successfully!", flush=True)
 
 
 if __name__ == "__main__":

@@ -12,8 +12,8 @@ services:
     runtime: python
     pythonVersion: "3.12"
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && python -m app.seed.seed && python -m app.ml.train_model
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt && python -m app.ml.train_model
+    startCommand: python -m app.seed.seed && uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -33,3 +33,5 @@ services:
         value: "app/ml/model/scaler.pkl"
       - key: SEED_FORCE
         value: "true"
+      - key: PYTHONUNBUFFERED
+        value: "1"
